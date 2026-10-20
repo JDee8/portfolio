@@ -1,0 +1,74 @@
+---
+const links = [
+  ['About', '/#about'],
+  ['Projects', '/#work'],
+  ['Timeline', '/#timeline'],
+  ['Skills', '/#skills'],
+  ['Contact', '/#contact'],
+];
+---
+
+<header class="nav" data-nav>
+  <a href="/" class="logo">jd<span class="dot">.</span><span class="sr-only"> João Dias, home</span></a>
+  <nav aria-label="Sections">
+    {links.map(([label, href]) => <a href={href}>{label}</a>)}
+  </nav>
+  <button class="kbtn" type="button" data-cmdk>
+    <span data-cmdk-key>Ctrl K</span><span class="sr-only"> open command menu</span>
+  </button>
+</header>
+
+<style>
+  .nav {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    height: 68px;
+    padding: 0 var(--gutter);
+    font-size: 14px;
+    border-bottom: 1px solid transparent;
+    transition: background .3s, border-color .3s;
+  }
+  .nav.solid {
+    background: rgba(7, 8, 11, .78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: var(--line);
+  }
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: -.02em;
+    padding: 6px 4px;
+  }
+  .logo .dot { color: var(--accent); }
+  nav { display: flex; gap: 12px; color: var(--dim); }
+  nav a { padding: 8px 8px; transition: color .2s; }
+  nav a:hover { color: var(--fg); }
+  .kbtn {
+    font-size: 13px;
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    padding: 8px 16px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: border-color .2s;
+  }
+  .kbtn:hover { border-color: var(--accent); }
+  @media (max-width: 860px) {
+    nav { display: none; }
+  }
+</style>
+
+<script>
+  const nav = document.querySelector<HTMLElement>('[data-nav]');
+  const update = () => nav?.classList.toggle('solid', scrollY > 40);
+  addEventListener('scroll', update, { passive: true });
+  update();
+</script>

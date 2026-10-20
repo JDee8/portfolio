@@ -1,0 +1,123 @@
+{
+  "_about": "Single source of truth for the site. Facts come from CV_João Dias.pdf (Oct 2026). Left out on purpose: phone number, aviation career, employer's network, agencies and SIEM product. The 'site' block holds web copy written to the BRAND.md copy rules.",
+  "_review": [
+    "Before deploying: confirm with your employer's policy whether the exact network, agencies and SIEM can be named. They are generalised for now."
+  ],
+
+  "name": "João Dias",
+  "headline": "Cybersecurity & Network Specialist",
+  "location": "Lisbon, Portugal",
+  "contact": {
+    "email": "joaodias649@gmail.com",
+    "linkedin": "https://linkedin.com/in/joaodias89",
+    "github": null
+  },
+
+  "site": {
+    "heroRole": "SOC analyst in Lisbon. I triage security alerts for national critical infrastructure.",
+    "focus": ["Security", "Networking", "AI", "Cloud"],
+    "about": [
+      "I work in a security operations center. I triage alerts and escalate the real incidents, within strict response times.",
+      "Before that I built the other side: Active Directory, firewalls, VPNs and endpoint management. I learned it in a two-year cybersecurity specialization and finished with 18/20.",
+      "I automate repeated work with Python, PowerShell and AI agents."
+    ]
+  },
+
+  "experience": [
+    {
+      "role": "SOC Analyst L1",
+      "org": "SIBS Multicert (SIBS Group)",
+      "location": "Lisbon, Portugal",
+      "start": "2026-05",
+      "end": null,
+      "points": [
+        "Monitor and analyze security alerts in a SIEM to triage threats across large-scale critical infrastructure.",
+        "Support incident response and escalation for a national public-safety network.",
+        "Work under strict confidentiality and SLA-driven response times."
+      ],
+      "tags": ["SIEM", "Incident triage", "Escalation", "SLA"]
+    }
+  ],
+
+  "projects": [
+    {
+      "id": "endpoint-management",
+      "title": "Enterprise endpoint management",
+      "context": "CET Cybersecurity · ATEC",
+      "summary": "Chose, designed and deployed a central endpoint management platform joined to Active Directory.",
+      "points": [
+        "Evaluated endpoint management solutions and wrote a comparison with a recommendation.",
+        "Designed the high-level and low-level architecture, integrated with the AD domain.",
+        "Deployed software distribution, patch management and system monitoring modules."
+      ],
+      "tags": ["Active Directory", "Patch management", "Architecture"],
+      "art": "fleet"
+    },
+    {
+      "id": "network-design",
+      "title": "Network infrastructure design",
+      "context": "CET Cybersecurity · ATEC",
+      "summary": "Segmented network with a DMZ, pfSense firewalls and site-to-site VPN.",
+      "points": [
+        "Designed VLAN segmentation, DMZ architecture and access control policies.",
+        "Configured pfSense firewalls with NAT/PAT and port rules.",
+        "Documented site-to-site VPNs (IPsec and OpenVPN), network diagrams and procedures."
+      ],
+      "tags": ["pfSense", "VLAN", "DMZ", "IPsec", "OpenVPN"],
+      "art": "network"
+    },
+    {
+      "id": "high-availability",
+      "title": "High-availability infrastructure",
+      "context": "CET Cybersecurity · ATEC",
+      "summary": "Active Directory with redundant domain controllers, a GPO baseline and DPM backups.",
+      "points": [
+        "Built an AD domain with redundant domain controllers.",
+        "Defined Group Policy Objects for the organization's configuration baseline.",
+        "Assessed backup options and implemented Data Protection Manager (DPM)."
+      ],
+      "tags": ["Active Directory", "GPO", "DPM", "Redundancy"],
+      "art": "failover"
+    },
+    {
+      "id": "multithreaded-app",
+      "title": "Multi-threaded data app",
+      "context": "CET Cybersecurity · ATEC",
+      "summary": "Python application that validates and processes data in parallel, stress-tested and documented.",
+      "points": [
+        "Built a multi-threaded Python application with data validation and processing.",
+        "Ran stress tests and edge-case tests, and documented performance.",
+        "Aligned the design with compliance requirements and recorded architecture decisions."
+      ],
+      "tags": ["Python", "Concurrency", "Testing"],
+      "art": "threads"
+    }
+  ],
+
+  "skills": [
+    { "group": "Monitoring & Security", "items": ["SIEM", "Phishing analysis", "OSINT", "Threat Hunting"] },
+    { "group": "Networking", "items": ["Cisco", "Check Point", "pfSense", "TCP/IP", "DNS", "DHCP", "VPN"] },
+    { "group": "Infrastructure", "items": ["Windows Server", "Linux", "Active Directory", "GPO"] },
+    { "group": "Automation", "items": ["AI agents", "n8n", "MCP", "CI/CD", "IaC"] },
+    { "group": "Cloud & Virtualization", "items": ["Azure", "Docker", "VMware"] },
+    { "group": "Scripting", "items": ["Python", "PowerShell", "Bash", "SQL"] }
+  ],
+
+  "certifications": [
+    { "name": "CompTIA Security+", "issuer": "CompTIA", "status": "Certified", "date": "2025-05" },
+    { "name": "CompTIA A+", "issuer": "CompTIA", "status": "Certified", "date": "2024-12" }
+  ],
+  "knowledgeLevel": ["CCNA", "AZ-900"],
+  "compliance": ["ISO 27001", "ISO 9001", "GDPR", "NIS2"],
+
+  "education": [
+    { "title": "Technological Specialization in Cybersecurity (CET, Level 5)", "school": "ATEC", "start": "2024-03", "end": "2026-07", "note": "Final grade 18/20" }
+  ],
+
+  "languages": [
+    { "name": "Portuguese", "level": "Native" },
+    { "name": "English", "level": "Full proficiency" },
+    { "name": "Spanish", "level": "Professional" },
+    { "name": "French", "level": "Limited" }
+  ]
+}

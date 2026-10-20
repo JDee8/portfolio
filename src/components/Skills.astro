@@ -1,0 +1,55 @@
+---
+import cv from '../content/cv.json';
+import CmdHeading from './CmdHeading.astro';
+
+const extra = [
+  ['Knowledge level', cv.knowledgeLevel.join(', ')],
+  ['Compliance training', cv.compliance.join(' · ')],
+  ['Languages', cv.languages.map((l) => `${l.name} (${l.level.toLowerCase()})`).join(' · ')],
+];
+---
+
+<section class="section" id="skills" data-cmd-section="Skills">
+  <p class="eyebrow reveal">Skills</p>
+  <CmdHeading label="Skills" cmd="cat skills.txt" />
+  <div class="groups">
+    {cv.skills.map((s) => (
+      <div class="group reveal">
+        <h3>{s.group}</h3>
+        <div class="tags">{s.items.map((i) => <span>{i}</span>)}</div>
+      </div>
+    ))}
+  </div>
+  <dl class="extra reveal">
+    {extra.map(([k, v]) => (
+      <div><dt>{k}</dt><dd>{v}</dd></div>
+    ))}
+  </dl>
+</section>
+
+<style>
+  .groups {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .group { background: var(--bg); padding: 24px; transition: background .3s; }
+  .group:hover { background: var(--surface); }
+  h3 { font-weight: 500; font-size: 15px; margin-bottom: 14px; }
+  .group:hover h3 { color: var(--accent); }
+  .extra { margin-top: 40px; display: grid; gap: 14px; }
+  .extra div { display: grid; grid-template-columns: 200px 1fr; gap: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+  dt { color: var(--dim); }
+  dd { color: var(--soft); }
+  @media (max-width: 900px) {
+    .groups { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .groups { grid-template-columns: 1fr; }
+    .extra div { grid-template-columns: 1fr; gap: 2px; }
+  }
+</style>

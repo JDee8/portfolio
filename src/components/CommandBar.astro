@@ -1,0 +1,212 @@
+---
+import cv from '../content/cv.json';
+import { encodedEmail } from '../lib/email';
+---
+
+<div class="cmdk" data-cmdk-root data-email={encodedEmail} data-linkedin={cv.contact.linkedin} inert>
+  <div class="cmdk-backdrop" data-cmdk-close></div>
+  <div class="cmdk-panel" role="dialog" aria-modal="true" aria-label="Command menu">
+    <div class="cmdk-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input class="cmdk-input" type="text" placeholder="Type a command or search…" autocomplete="off" spellcheck="false"
+        role="combobox" aria-expanded="true" aria-controls="cmdk-list" aria-autocomplete="list" />
+      <kbd>esc</kbd>
+    </div>
+    <div class="cmdk-list" id="cmdk-list" role="listbox"></div>
+    <div class="cmdk-foot">
+      <span><kbd>↑</kbd><kbd>↓</kbd>move</span><span><kbd>↵</kbd>run</span><span><kbd data-cmdk-key>Ctrl K</kbd>toggle</span>
+    </div>
+  </div>
+</div>
+<div class="cmdk-toast" role="status" data-toast></div>
+
+<style is:global>
+  .cmdk { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: start center; padding: 14vh 16px 16px; visibility: hidden; pointer-events: none; transition: visibility 0s .22s; }
+  .cmdk.is-open { visibility: visible; pointer-events: auto; transition: none; }
+  .cmdk-backdrop { position: absolute; inset: 0; background: rgba(4, 5, 8, .6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity .2s; }
+  .cmdk.is-open .cmdk-backdrop { opacity: 1; }
+  .cmdk-panel { position: relative; width: min(560px, 100%); background: var(--surface); color: var(--fg); border: 1px solid var(--line-2); border-radius: 14px; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, .6); overflow: hidden; opacity: 0; transform: translateY(-10px) scale(.98); transition: opacity .18s, transform .24s var(--ease); }
+  .cmdk.is-open .cmdk-panel { opacity: 1; transform: none; }
+  .cmdk-search { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line-2); }
+  .cmdk-search svg { flex: none; color: var(--dim); }
+  .cmdk-input { flex: 1; min-width: 0; background: none; border: 0; outline: 0; color: inherit; font: inherit; font-size: 15px; }
+  .cmdk-input::placeholder { color: var(--dim); }
+  .cmdk kbd { font: 11px/1.6 var(--font-body); padding: 0 6px; border: 1px solid var(--line-2); border-radius: 4px; color: var(--dim); }
+  .cmdk-list { max-height: min(52vh, 400px); overflow: auto; padding: 6px; overscroll-behavior: contain; }
+  .cmdk-group { padding: 10px 10px 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); }
+  .cmdk-item { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 9px; cursor: pointer; font-size: 14px; }
+  .cmdk-item.is-active { background: #161a22; }
+  .cmdk-item.is-active::before { content: ""; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px; border-radius: 2px; background: var(--accent); }
+  .cmdk-hint { font-size: 12px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cmdk-empty { padding: 24px 10px; text-align: center; color: var(--dim); font-size: 14px; }
+  .cmdk-foot { display: flex; gap: 18px; padding: 10px 16px; border-top: 1px solid var(--line-2); font-size: 12px; color: var(--dim); }
+  .cmdk-foot kbd { margin-right: 4px; }
+  .cmdk-toast { position: fixed; left: 50%; bottom: 28px; z-index: 1001; max-width: calc(100vw - 32px); transform: translate(-50%, 12px); opacity: 0; padding: 10px 16px; background: var(--surface); color: var(--fg); border: 1px solid var(--line-2); border-radius: 12px; font-size: 13px; pointer-events: none; transition: opacity .25s, transform .25s; }
+  .cmdk-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 560px) {
+    .cmdk { padding-top: 10vh; }
+    .cmdk-foot { display: none; }
+  }
+</style>
+
+<script>
+  import { motionOff, setMotion } from '../scripts/motion';
+  import { openEmail } from '../scripts/email';
+  import { toast } from '../scripts/toast';
+
+  interface Command { group: string; label: string; hint?: string; run: () => void }
+
+  const root = document.querySelector<HTMLElement>('[data-cmdk-root]')!;
+  const input = root.querySelector<HTMLInputElement>('.cmdk-input')!;
+  const list = root.querySelector<HTMLElement>('.cmdk-list')!;
+  let open = false, active = 0, lastFocus: HTMLElement | null = null;
+  let commands: Command[] = [], shown: Command[] = [];
+
+  if (/Mac|iPhone|iPad/.test(navigator.platform)) {
+    document.querySelectorAll('[data-cmdk-key]').forEach((el) => { el.textContent = '⌘ K'; });
+  }
+
+  const behavior = (): ScrollBehavior => (motionOff() ? 'auto' : 'smooth');
+
+  // Commands are rebuilt on every open, so labels reflect the current state.
+  function buildCommands(): Command[] {
+    const cmds: Command[] = [];
+    const sections = [...document.querySelectorAll<HTMLElement>('[data-cmd-section]')];
+    if (sections.length) {
+      for (const s of sections) {
+        cmds.push({ group: 'Go to', label: s.dataset.cmdSection!, run: () => s.scrollIntoView({ behavior: behavior(), block: 'start' }) });
+      }
+      cmds.push({ group: 'Go to', label: 'Top of page', run: () => scrollTo({ top: 0, behavior: behavior() }) });
+    } else {
+      cmds.push({ group: 'Go to', label: 'Home page', run: () => { location.href = '/'; } });
+    }
+    cmds.push({
+      group: 'Contact', label: 'Send me an email', hint: 'opens your email app',
+      run: () => {
+        openEmail(root.dataset.email!);
+        toast('Opening your email app. No email app? LinkedIn works too.');
+      },
+    });
+    cmds.push({ group: 'Contact', label: 'Open LinkedIn', hint: 'new tab', run: () => window.open(root.dataset.linkedin, '_blank', 'noopener') });
+    if (document.querySelector('[data-particles]')) {
+      cmds.push({
+        group: 'Play', label: 'Scatter the name', hint: motionOff() ? 'needs animations on' : undefined,
+        run: () => {
+          if (scrollY > innerHeight * 0.5) {
+            scrollTo({ top: 0, behavior: behavior() });
+            setTimeout(() => dispatchEvent(new CustomEvent('jd:scatter')), 700);
+          } else {
+            dispatchEvent(new CustomEvent('jd:scatter'));
+          }
+        },
+      });
+    }
+    cmds.push({
+      group: 'Settings', label: motionOff() ? 'Turn animations on' : 'Turn animations off',
+      run: () => { setMotion(motionOff()); toast(motionOff() ? 'Animations off' : 'Animations on'); },
+    });
+    return cmds;
+  }
+
+  // Substring match first, then letters in order ("snd eml" finds "Send me an email").
+  function matches(label: string, q: string) {
+    if (!q) return true;
+    const l = label.toLowerCase();
+    if (l.includes(q)) return true;
+    let p = 0;
+    for (const ch of q.replace(/\s+/g, '')) {
+      p = l.indexOf(ch, p);
+      if (p < 0) return false;
+      p++;
+    }
+    return true;
+  }
+
+  const escape = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+
+  function render() {
+    const q = input.value.trim().toLowerCase();
+    shown = commands.filter((c) => matches(c.label, q));
+    active = Math.min(active, Math.max(shown.length - 1, 0));
+    let html = '', group = '';
+    shown.forEach((c, i) => {
+      if (c.group !== group) {
+        group = c.group;
+        html += `<div class="cmdk-group" role="presentation">${group}</div>`;
+      }
+      html += `<div class="cmdk-item${i === active ? ' is-active' : ''}" role="option" id="cmdk-opt-${i}" data-i="${i}" aria-selected="${i === active}"><span>${escape(c.label)}</span>${c.hint ? `<span class="cmdk-hint">${escape(c.hint)}</span>` : ''}</div>`;
+    });
+    list.innerHTML = html || '<div class="cmdk-empty">No matching command</div>';
+    if (shown.length) input.setAttribute('aria-activedescendant', `cmdk-opt-${active}`);
+    else input.removeAttribute('aria-activedescendant');
+  }
+
+  function setActive(i: number, scroll = true) {
+    if (!shown.length) return;
+    active = (i + shown.length) % shown.length;
+    list.querySelectorAll<HTMLElement>('.cmdk-item').forEach((el) => {
+      const on = Number(el.dataset.i) === active;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', String(on));
+      if (on && scroll) el.scrollIntoView({ block: 'nearest' });
+    });
+    input.setAttribute('aria-activedescendant', `cmdk-opt-${active}`);
+  }
+
+  function show() {
+    if (open) return;
+    open = true;
+    lastFocus = document.activeElement as HTMLElement | null;
+    commands = buildCommands();
+    input.value = '';
+    active = 0;
+    render();
+    root.inert = false;
+    root.classList.add('is-open');
+    requestAnimationFrame(() => input.focus());
+  }
+
+  function hide() {
+    if (!open) return;
+    open = false;
+    root.classList.remove('is-open');
+    root.inert = true;
+    lastFocus?.focus?.({ preventScroll: true });
+  }
+
+  function runAt(i: number) {
+    const cmd = shown[i];
+    if (!cmd) return;
+    hide();
+    setTimeout(() => cmd.run(), motionOff() ? 0 : 140);
+  }
+
+  input.addEventListener('input', () => { active = 0; render(); });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(active + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); runAt(active); }
+    else if (e.key === 'Escape') { e.preventDefault(); hide(); }
+    else if (e.key === 'Tab') { e.preventDefault(); }
+  });
+  list.addEventListener('pointermove', (e) => {
+    const item = (e.target as Element).closest<HTMLElement>('.cmdk-item');
+    if (item && Number(item.dataset.i) !== active) setActive(Number(item.dataset.i), false);
+  });
+  list.addEventListener('click', (e) => {
+    const item = (e.target as Element).closest<HTMLElement>('.cmdk-item');
+    if (item) runAt(Number(item.dataset.i));
+  });
+  root.querySelector('[data-cmdk-close]')!.addEventListener('click', hide);
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (open) hide(); else show();
+    } else if (e.key === 'Escape' && open) {
+      hide();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if ((e.target as Element).closest('[data-cmdk]')) { e.preventDefault(); show(); }
+  });
+</script>

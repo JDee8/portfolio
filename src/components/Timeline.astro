@@ -1,0 +1,131 @@
+---
+import cv from '../content/cv.json';
+import { month, range } from '../lib/format';
+import CmdHeading from './CmdHeading.astro';
+
+interface Entry {
+  kind: 'major' | 'milestone';
+  title: string;
+  org: string;
+  when: string;
+  sort: string;
+  points?: string[];
+  tags?: string[];
+  note?: string;
+  current?: boolean;
+}
+
+// Jobs, education and certifications in one list, newest first (ongoing roles on top).
+const entries: Entry[] = [
+  ...cv.experience.map((e) => ({
+    kind: 'major' as const, title: e.role, org: e.org, when: range(e.start, e.end),
+    sort: e.end ?? '9999-12', points: e.points, tags: e.tags, current: !e.end,
+  })),
+  ...cv.education.map((e) => ({
+    kind: 'major' as const, title: e.title, org: e.school, when: range(e.start, e.end), sort: e.end, note: e.note,
+  })),
+  ...cv.certifications.map((c) => ({
+    kind: 'milestone' as const, title: c.name, org: `${c.issuer} · ${c.status}`, when: month(c.date), sort: c.date,
+  })),
+].sort((a, b) => b.sort.localeCompare(a.sort));
+---
+
+<section class="section" id="timeline" data-cmd-section="Timeline">
+  <p class="eyebrow reveal">Timeline</p>
+  <CmdHeading label="Timeline" cmd="git log --career" />
+  <div class="tl" data-timeline>
+    <span class="rail" aria-hidden="true"></span>
+    <span class="fill" aria-hidden="true"></span>
+    <ol>
+      {entries.map((e) => (
+        <li class:list={['item', e.kind, { current: e.current }]}>
+          <span class="when">{e.when}</span>
+          <div>
+            <h3>{e.title}</h3>
+            <p class="org">{e.org}{e.note && <> · <b>{e.note}</b></>}</p>
+            {e.points && <ul class="points">{e.points.map((p) => <li>{p}</li>)}</ul>}
+            {e.tags && e.tags.length > 0 && <div class="tags">{e.tags.map((t) => <span>{t}</span>)}</div>}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </div>
+</section>
+
+<style>
+  .tl { position: relative; padding-left: 40px; }
+  .rail, .fill { position: absolute; left: 6px; top: 8px; width: 1px; }
+  .rail { bottom: 8px; background: var(--line); }
+  .fill {
+    height: calc(100% - 16px);
+    background: linear-gradient(var(--accent), rgba(255, 181, 71, .15));
+    transform-origin: top;
+    transform: scaleY(var(--p, 0));
+  }
+  ol { list-style: none; }
+  .item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 24px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .item::before {
+    content: '';
+    position: absolute;
+    left: -39px;
+    top: 36px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--dim);
+    transition: background .4s, border-color .4s, box-shadow .4s;
+  }
+  .item.lit::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 6px rgba(255, 181, 71, .12); }
+  .milestone { padding: 18px 0; }
+  .milestone::before { top: 25px; width: 9px; height: 9px; left: -38px; }
+  .when { color: var(--dim); padding-top: 4px; font-variant-numeric: tabular-nums; }
+  .current .when { color: var(--accent); }
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(22px, 2.4vw, 32px);
+    letter-spacing: -.02em;
+    line-height: 1.15;
+  }
+  .milestone h3 { font-size: clamp(18px, 1.6vw, 22px); }
+  .org { color: var(--dim); margin-top: 2px; }
+  .org b { color: var(--fg); font-weight: 500; }
+  .points { margin-top: 12px; padding-left: 18px; color: var(--soft); max-width: 62ch; }
+  .points li + li { margin-top: 6px; }
+  .points li::marker { color: var(--accent); }
+  .tags { margin-top: 16px; }
+  @media (max-width: 760px) {
+    .item { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+
+<script>
+  import { motionOff } from '../scripts/motion';
+
+  // The rail fills and the dots light up as you scroll through the timeline.
+  const tl = document.querySelector<HTMLElement>('[data-timeline]');
+  if (tl) {
+    const items = [...tl.querySelectorAll<HTMLElement>('.item')];
+    const update = () => {
+      const all = motionOff();
+      const r = tl.getBoundingClientRect();
+      const p = Math.min(1, Math.max(0, (innerHeight * 0.6 - r.top) / r.height));
+      tl.style.setProperty('--p', String(all ? 1 : p));
+      items.forEach((it) => it.classList.toggle('lit', all || it.getBoundingClientRect().top < innerHeight * 0.6));
+    };
+    let queued = false;
+    addEventListener('scroll', () => {
+      if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; update(); }); }
+    }, { passive: true });
+    addEventListener('jd:motion', update);
+    update();
+  }
+</script>

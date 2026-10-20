@@ -1,0 +1,48 @@
+---
+// Section heading written as a shell command. Screen readers get the plain label.
+interface Props {
+  label: string;
+  cmd: string;
+  tight?: boolean;
+}
+const { label, cmd, tight = false } = Astro.props;
+---
+
+<h2 class:list={['cmd-h', 'reveal', { tight }]}>
+  <span class="sr-only">{label}</span>
+  <span aria-hidden="true"><span class="ps">$</span> <span class="type"><span class="ghost">{cmd}</span><span class="out" data-type={cmd}>{cmd}</span></span></span>
+</h2>
+
+<style>
+  .cmd-h {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(28px, 4.6vw, 64px);
+    line-height: 1.1;
+    letter-spacing: -.045em;
+    margin-bottom: 56px;
+  }
+  .tight { margin-bottom: 20px; }
+  .ps { color: var(--accent); }
+  /* The hidden ghost reserves the full width, so typing never shifts the layout. */
+  .type { display: inline-grid; }
+  .ghost, .out { grid-area: 1 / 1; white-space: pre; }
+  .ghost { visibility: hidden; }
+  .out::after {
+    content: '';
+    display: inline-block;
+    width: .55em;
+    height: .9em;
+    margin-left: .1em;
+    vertical-align: -.1em;
+    background: var(--accent);
+    animation: blink 1.05s steps(1) infinite;
+    transition: opacity .5s;
+  }
+  .out:global(.done)::after { opacity: 0; animation: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+
+<script>
+  import '../scripts/typed';
+</script>

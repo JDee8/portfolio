@@ -1,0 +1,48 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Page not found · João Dias" noindex>
+  <main id="main">
+    <section class="lost" data-particles data-text="404">
+      <canvas aria-hidden="true"></canvas>
+      <div class="msg">
+        <h1>This page does not exist.</h1>
+        <p>Scatter the numbers if you like. Then <a href="/">go home</a> or press <button type="button" data-cmdk><span data-cmdk-key>Ctrl K</span></button>.</p>
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .lost { position: relative; height: min(100svh, 1600px); min-height: 520px; overflow: hidden; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
+  .msg {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 0 var(--gutter) 48px;
+    text-align: center;
+    pointer-events: none;
+  }
+  .msg a, .msg button { pointer-events: auto; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(22px, 2.6vw, 32px); letter-spacing: -.01em; }
+  p { color: var(--dim); margin-top: 8px; }
+  a { color: var(--accent); }
+  a:hover { text-decoration: underline; }
+  button {
+    background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+    padding: 1px 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+</style>
+
+<script>
+  import { particleText } from '../scripts/particles';
+  const host = document.querySelector<HTMLElement>('.lost');
+  const canvas = host?.querySelector('canvas');
+  if (host && canvas) particleText(canvas, host);
+</script>

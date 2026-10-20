@@ -1,0 +1,51 @@
+---
+import cv from '../content/cv.json';
+import { encodedEmail } from '../lib/email';
+import CmdHeading from './CmdHeading.astro';
+---
+
+<section class="section contact" id="contact" data-cmd-section="Contact">
+  <p class="eyebrow reveal">Contact</p>
+  <CmdHeading label="Contact" cmd="ping joao" tight />
+  <p class="sub reveal">Email or LinkedIn. Both reach me.</p>
+  <div class="actions reveal">
+    <button class="pill" type="button" data-email={encodedEmail}>
+      Email <span class="arrow" aria-hidden="true">→</span>
+    </button>
+    <a class="pill" href={cv.contact.linkedin} target="_blank" rel="noopener">
+      LinkedIn <span class="arrow" aria-hidden="true">↗</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .contact { text-align: center; padding-top: 180px; }
+  .sub { color: var(--dim); font-size: 18px; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 36px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: clamp(16px, 1.8vw, 20px);
+    padding: 14px 24px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    background: none;
+    cursor: pointer;
+    transition: border-color .3s, background .3s;
+  }
+  .pill:hover { border-color: var(--accent); background: rgba(255, 181, 71, .06); }
+  .arrow { display: inline-block; transition: transform .4s var(--ease); }
+  .pill:hover .arrow { transform: translateX(4px); }
+</style>
+
+<script>
+  import { openEmail } from '../scripts/email';
+  import { toast } from '../scripts/toast';
+
+  const button = document.querySelector<HTMLButtonElement>('.contact button[data-email]');
+  button?.addEventListener('click', () => {
+    openEmail(button.dataset.email!);
+    toast('Opening your email app. No email app? LinkedIn works too.');
+  });
+</script>

@@ -1,0 +1,111 @@
+---
+import cv from '../content/cv.json';
+
+// "SOC analyst in Lisbon. I triage…" → first sentence highlighted.
+const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
+---
+
+<section class="hero" id="top" data-particles data-text={cv.name.toUpperCase()}>
+  <canvas aria-hidden="true"></canvas>
+  <div class="glow" aria-hidden="true"></div>
+  <h1 class="sr-only">{cv.name}, {cv.headline}</h1>
+  <div class="bottom">
+    <p class="role"><span>{lead}</span> {rest.join(' ')}</p>
+    <ul class="focus" aria-label="Focus areas">
+      {cv.site.focus.map((f) => <li>{f}</li>)}
+    </ul>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    height: min(100svh, 1600px);
+    min-height: 560px;
+    overflow: hidden;
+  }
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    touch-action: pan-y;
+    /* --exit goes 0 → 1 as the hero scrolls away: the name sinks and fades. */
+    opacity: calc(1 - var(--exit, 0) * 1.15);
+    transform: translate3d(0, calc(var(--exit, 0) * 22vh), 0);
+  }
+  .glow {
+    position: absolute;
+    inset: auto 0 -40% 0;
+    height: 80%;
+    background: radial-gradient(50% 50% at 50% 50%, rgba(255, 181, 71, .1), transparent 70%);
+    pointer-events: none;
+  }
+  .bottom {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 16px;
+    padding: 0 var(--gutter) 28px;
+    pointer-events: none;
+    opacity: calc(1 - var(--exit, 0) * 2.5);
+  }
+  .role {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(18px, 2vw, 26px);
+    line-height: 1.2;
+    letter-spacing: -.01em;
+    max-width: 30ch;
+    color: var(--soft);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 1s 1.2s, transform 1s var(--ease) 1.2s;
+  }
+  .role span { color: var(--accent); }
+  .focus {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    list-style: none;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 1s 1.45s, transform 1s var(--ease) 1.45s;
+  }
+  .focus li {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--soft);
+    padding: 4px 12px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .03);
+  }
+  .hero:global(.ready) .role,
+  .hero:global(.ready) .focus { opacity: 1; transform: none; }
+</style>
+
+<script>
+  import { particleText } from '../scripts/particles';
+  import { motionOff } from '../scripts/motion';
+
+  const host = document.querySelector<HTMLElement>('.hero[data-particles]');
+  const canvas = host?.querySelector('canvas');
+  if (host && canvas) {
+    particleText(canvas, host);
+
+    let queued = false;
+    const exit = () => {
+      queued = false;
+      const p = motionOff() ? 0 : Math.min(1, scrollY / host.offsetHeight);
+      host.style.setProperty('--exit', p.toFixed(3));
+    };
+    addEventListener('scroll', () => {
+      if (!queued) { queued = true; requestAnimationFrame(exit); }
+    }, { passive: true });
+    addEventListener('jd:motion', exit);
+    exit();
+  }
+</script>

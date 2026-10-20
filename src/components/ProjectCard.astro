@@ -1,0 +1,84 @@
+---
+interface Props {
+  project: {
+    title: string;
+    summary: string;
+    points: string[];
+    tags: string[];
+    art: string;
+  };
+}
+const { project } = Astro.props;
+---
+
+<article class="card reveal" data-tilt>
+  <div class="art"><canvas data-art={project.art} aria-hidden="true"></canvas></div>
+  <div class="body">
+    <h3>{project.title}</h3>
+    <p>{project.summary}</p>
+    <div class="tags">{project.tags.map((t) => <span>{t}</span>)}</div>
+    <details>
+      <summary>How I built it<span class="sr-only">: {project.title}</span></summary>
+      <ul>{project.points.map((p) => <li>{p}</li>)}</ul>
+    </details>
+  </div>
+  <div class="glare" aria-hidden="true"></div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    border-radius: 20px;
+    overflow: hidden;
+    will-change: transform;
+  }
+  .card:hover { border-color: var(--line-2); }
+  .card.in { transition: opacity 1s, transform .5s var(--ease), border-color .3s; }
+  .art {
+    height: 240px;
+    border-bottom: 1px solid var(--line);
+    background: radial-gradient(120% 90% at 50% 0%, rgba(255, 255, 255, .025), transparent 60%);
+  }
+  canvas { width: 100%; height: 100%; }
+  .body { padding: 22px 24px 24px; }
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 26px;
+    letter-spacing: -.02em;
+    line-height: 1.15;
+    margin: 0 0 8px;
+  }
+  p { color: var(--soft); font-size: 15px; }
+  .tags { margin-top: 16px; }
+  details { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  summary {
+    cursor: pointer;
+    list-style: none;
+    font-size: 14px;
+    color: var(--dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    transition: color .2s;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: '+'; color: var(--accent); font-size: 16px; line-height: 1; transition: transform .3s var(--ease); }
+  details[open] summary::before { transform: rotate(45deg); }
+  summary:hover { color: var(--fg); }
+  ul { margin-top: 12px; padding-left: 18px; color: var(--soft); font-size: 14.5px; }
+  li + li { margin-top: 6px; }
+  li::marker { color: var(--accent); }
+  .glare {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .3s;
+    background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), rgba(255, 255, 255, .07), transparent 45%);
+  }
+  .card:hover .glare { opacity: 1; }
+</style>

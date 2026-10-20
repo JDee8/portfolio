@@ -1,0 +1,32 @@
+---
+import cv from '../content/cv.json';
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <span>© {year} {cv.name}</span>
+  <button type="button" data-cmdk>Press <span data-cmdk-key>Ctrl K</span></button>
+</footer>
+
+<style>
+  footer {
+    max-width: var(--max);
+    margin: 120px auto 0;
+    padding: 22px var(--gutter) 40px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px 24px;
+    color: var(--dim);
+    font-size: 13px;
+  }
+  button {
+    background: none;
+    border: 0;
+    color: var(--dim);
+    cursor: pointer;
+    font-size: 13px;
+  }
+  button:hover { color: var(--accent); }
+</style>

@@ -1,0 +1,48 @@
+---
+import cv from '../content/cv.json';
+import ProjectCard from './ProjectCard.astro';
+import CmdHeading from './CmdHeading.astro';
+---
+
+<section class="section" id="work" data-cmd-section="Projects">
+  <p class="eyebrow reveal">Projects</p>
+  <CmdHeading label="Projects" cmd="ls ~/projects" />
+  <div class="grid">
+    {cv.projects.map((project) => <ProjectCard project={project} />)}
+  </div>
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  import { mountArt } from '../scripts/art';
+  import { motionOff } from '../scripts/motion';
+
+  document.querySelectorAll<HTMLCanvasElement>('canvas[data-art]').forEach(mountArt);
+
+  // Cards tilt toward the cursor (mouse and trackpad only).
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
+      card.addEventListener('pointermove', (e) => {
+        if (motionOff()) return;
+        const r = card.getBoundingClientRect();
+        const u = (e.clientX - r.left) / r.width;
+        const v = (e.clientY - r.top) / r.height;
+        card.style.transform = `perspective(1100px) rotateX(${(0.5 - v) * 6}deg) rotateY(${(u - 0.5) * 8}deg)`;
+        card.style.setProperty('--gx', `${u * 100}%`);
+        card.style.setProperty('--gy', `${v * 100}%`);
+      });
+      card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+    });
+  }
+</script>
