@@ -1,32 +1,88 @@
 ---
 import cv from '../content/cv.json';
 const year = new Date().getFullYear();
+// Reference: footer.design (full-width wordmark footers). The name is drawn as a
+// dot grid in CSS, so it echoes the particle hero without another canvas.
+// An amber light follows the cursor across it.
 ---
 
-<footer>
-  <span>© {year} {cv.name}</span>
-  <button type="button" data-cmdk>Press <span data-cmdk-key>Ctrl K</span></button>
+<footer class="foot">
+  <div class="row">
+    <span>© {year} {cv.name}</span>
+    <span class="mono" data-clock="Lisbon" aria-hidden="true">Lisbon</span>
+    <span class="links">
+      <button type="button" data-cmdk>Press <span data-cmdk-key>Ctrl K</span></button>
+      <a href="#top" data-top>Back to top <span aria-hidden="true">↑</span></a>
+    </span>
+  </div>
+  <div class="mark" aria-hidden="true" data-mark>
+    <span class="base">{cv.name.toUpperCase()}</span>
+    <span class="lit">{cv.name.toUpperCase()}</span>
+  </div>
 </footer>
 
 <style>
-  footer {
+  .foot {
     max-width: var(--max);
     margin: 120px auto 0;
-    padding: 22px var(--gutter) 40px;
-    border-top: 1px solid var(--line);
+    padding: 0 var(--gutter);
+    color: var(--dim);
+    font-size: 13px;
+    overflow: hidden;
+  }
+  .row {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    align-items: center;
     gap: 10px 24px;
-    color: var(--dim);
-    font-size: 13px;
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
   }
-  button {
-    background: none;
-    border: 0;
-    color: var(--dim);
-    cursor: pointer;
-    font-size: 13px;
+  .links { display: flex; gap: 20px; }
+  button, a { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 13px; padding: 6px 0; }
+  button:hover, a:hover { color: var(--accent); }
+
+  .mark {
+    position: relative;
+    margin: 12px 0 -0.08em;
+    font-family: var(--font-display);
+    font-weight: 600;
+    /* Sized so "JOÃO DIAS" spans the content width (the name is ≈ 5.4 em wide). */
+    font-size: min(calc((100vw - 2 * var(--gutter)) / 5.5), calc(var(--max) / 5.5 - 10px));
+    line-height: .9;
+    letter-spacing: -.02em;
+    white-space: nowrap;
+    user-select: none;
   }
-  button:hover { color: var(--accent); }
+  .mark span {
+    display: block;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background-size: 6px 6px;
+  }
+  .base { background-image: radial-gradient(circle, color-mix(in srgb, var(--fg) 30%, transparent) 1.1px, transparent 1.5px); }
+  .lit {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--accent) 1.3px, transparent 1.7px);
+    -webkit-mask-image: radial-gradient(220px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 70%);
+    mask-image: radial-gradient(220px circle at var(--mx, -999px) var(--my, -999px), #000, transparent 70%);
+  }
 </style>
+
+<script>
+  const mark = document.querySelector<HTMLElement>('[data-mark]');
+  if (mark && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    mark.addEventListener('pointermove', (e) => {
+      const r = mark.getBoundingClientRect();
+      mark.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      mark.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+    mark.addEventListener('pointerleave', () => {
+      mark.style.removeProperty('--mx');
+      mark.style.removeProperty('--my');
+    });
+  }
+</script>

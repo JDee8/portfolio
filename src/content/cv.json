@@ -1,9 +1,8 @@
 {
-  "_about": "Single source of truth for the site. Facts come from CV_João Dias.pdf (Oct 2026). Left out on purpose: phone number, aviation career, employer's network, agencies and SIEM product. The 'site' block holds web copy written to the BRAND.md copy rules.",
+  "_about": "v2 copy of the portfolio content. Same facts as v1 (portfolio/src/content/cv.json). Edit it in the Website OS at /os (npm run dev), or by hand.",
   "_review": [
     "Before deploying: confirm with your employer's policy whether the exact network, agencies and SIEM can be named. They are generalised for now."
   ],
-
   "name": "João Dias",
   "headline": "Cybersecurity & Network Specialist",
   "location": "Lisbon, Portugal",
@@ -12,17 +11,21 @@
     "linkedin": "https://linkedin.com/in/joaodias89",
     "github": null
   },
-
   "site": {
     "heroRole": "SOC analyst in Lisbon. I triage security alerts for national critical infrastructure.",
-    "focus": ["Security", "Networking", "AI", "Cloud"],
+    "focus": [
+      "Security",
+      "Networking",
+      "AI",
+      "Cloud"
+    ],
     "about": [
       "I work in a security operations center. I triage alerts and escalate the real incidents, within strict response times.",
       "Before that I built the other side: Active Directory, firewalls, VPNs and endpoint management. I learned it in a two-year cybersecurity specialization and finished with 18/20.",
       "I automate repeated work with Python, PowerShell and AI agents."
-    ]
+    ],
+    "contactLine": "Email or LinkedIn. Both reach me."
   },
-
   "experience": [
     {
       "role": "SOC Analyst L1",
@@ -35,10 +38,14 @@
         "Support incident response and escalation for a national public-safety network.",
         "Work under strict confidentiality and SLA-driven response times."
       ],
-      "tags": ["SIEM", "Incident triage", "Escalation", "SLA"]
+      "tags": [
+        "SIEM",
+        "Incident triage",
+        "Escalation",
+        "SLA"
+      ]
     }
   ],
-
   "projects": [
     {
       "id": "endpoint-management",
@@ -50,8 +57,13 @@
         "Designed the high-level and low-level architecture, integrated with the AD domain.",
         "Deployed software distribution, patch management and system monitoring modules."
       ],
-      "tags": ["Active Directory", "Patch management", "Architecture"],
-      "art": "fleet"
+      "tags": [
+        "Active Directory",
+        "Patch management",
+        "Architecture"
+      ],
+      "art": "fleet",
+      "artCaption": "Patch rollout across 40 endpoints"
     },
     {
       "id": "network-design",
@@ -63,8 +75,15 @@
         "Configured pfSense firewalls with NAT/PAT and port rules.",
         "Documented site-to-site VPNs (IPsec and OpenVPN), network diagrams and procedures."
       ],
-      "tags": ["pfSense", "VLAN", "DMZ", "IPsec", "OpenVPN"],
-      "art": "network"
+      "tags": [
+        "pfSense",
+        "VLAN",
+        "DMZ",
+        "IPsec",
+        "OpenVPN"
+      ],
+      "art": "network",
+      "artCaption": "Blocked WAN probes and an IPsec tunnel"
     },
     {
       "id": "high-availability",
@@ -76,8 +95,14 @@
         "Defined Group Policy Objects for the organization's configuration baseline.",
         "Assessed backup options and implemented Data Protection Manager (DPM)."
       ],
-      "tags": ["Active Directory", "GPO", "DPM", "Redundancy"],
-      "art": "failover"
+      "tags": [
+        "Active Directory",
+        "GPO",
+        "DPM",
+        "Redundancy"
+      ],
+      "art": "failover",
+      "artCaption": "DC01 fails and DC02 takes over"
     },
     {
       "id": "multithreaded-app",
@@ -89,35 +114,127 @@
         "Ran stress tests and edge-case tests, and documented performance.",
         "Aligned the design with compliance requirements and recorded architecture decisions."
       ],
-      "tags": ["Python", "Concurrency", "Testing"],
-      "art": "threads"
+      "tags": [
+        "Python",
+        "Concurrency",
+        "Testing"
+      ],
+      "art": "threads",
+      "artCaption": "4 threads and a validation gate"
     }
   ],
-
   "skills": [
-    { "group": "Monitoring & Security", "items": ["SIEM", "Phishing analysis", "OSINT", "Threat Hunting"] },
-    { "group": "Networking", "items": ["Cisco", "Check Point", "pfSense", "TCP/IP", "DNS", "DHCP", "VPN"] },
-    { "group": "Infrastructure", "items": ["Windows Server", "Linux", "Active Directory", "GPO"] },
-    { "group": "Automation", "items": ["AI agents", "n8n", "MCP", "CI/CD", "IaC"] },
-    { "group": "Cloud & Virtualization", "items": ["Azure", "Docker", "VMware"] },
-    { "group": "Scripting", "items": ["Python", "PowerShell", "Bash", "SQL"] }
+    {
+      "group": "Monitoring & Security",
+      "items": [
+        "SIEM",
+        "Phishing analysis",
+        "OSINT",
+        "Threat Hunting"
+      ]
+    },
+    {
+      "group": "Networking",
+      "items": [
+        "Cisco",
+        "Check Point",
+        "pfSense",
+        "TCP/IP",
+        "DNS",
+        "DHCP",
+        "VPN"
+      ]
+    },
+    {
+      "group": "Infrastructure",
+      "items": [
+        "Windows Server",
+        "Linux",
+        "Active Directory",
+        "GPO"
+      ]
+    },
+    {
+      "group": "Automation",
+      "items": [
+        "AI agents",
+        "n8n",
+        "MCP",
+        "CI/CD",
+        "IaC"
+      ]
+    },
+    {
+      "group": "Cloud & Virtualization",
+      "items": [
+        "Azure",
+        "Docker",
+        "VMware"
+      ]
+    },
+    {
+      "group": "Scripting",
+      "items": [
+        "Python",
+        "PowerShell",
+        "Bash",
+        "SQL"
+      ]
+    }
   ],
-
   "certifications": [
-    { "name": "CompTIA Security+", "issuer": "CompTIA", "status": "Certified", "date": "2025-05" },
-    { "name": "CompTIA A+", "issuer": "CompTIA", "status": "Certified", "date": "2024-12" }
+    {
+      "name": "CompTIA Security+",
+      "issuer": "CompTIA",
+      "status": "Certified",
+      "date": "2025-05"
+    },
+    {
+      "name": "CompTIA A+",
+      "issuer": "CompTIA",
+      "status": "Certified",
+      "date": "2024-12"
+    }
   ],
-  "knowledgeLevel": ["CCNA", "AZ-900"],
-  "compliance": ["ISO 27001", "ISO 9001", "GDPR", "NIS2"],
-
+  "knowledgeLevel": [
+    "CCNA",
+    "AZ-900"
+  ],
+  "compliance": [
+    "ISO 27001",
+    "ISO 9001",
+    "GDPR",
+    "NIS2"
+  ],
   "education": [
-    { "title": "Technological Specialization in Cybersecurity (CET, Level 5)", "school": "ATEC", "start": "2024-03", "end": "2026-07", "note": "Final grade 18/20" }
+    {
+      "title": "Technological Specialization in Cybersecurity (CET, Level 5)",
+      "school": "ATEC",
+      "start": "2024-03",
+      "end": "2026-07",
+      "note": "Final grade 18/20"
+    }
   ],
-
   "languages": [
-    { "name": "Portuguese", "level": "Native" },
-    { "name": "English", "level": "Full proficiency" },
-    { "name": "Spanish", "level": "Professional" },
-    { "name": "French", "level": "Limited" }
-  ]
+    {
+      "name": "Portuguese",
+      "level": "Native"
+    },
+    {
+      "name": "English",
+      "level": "Full proficiency"
+    },
+    {
+      "name": "Spanish",
+      "level": "Professional"
+    },
+    {
+      "name": "French",
+      "level": "Limited"
+    }
+  ],
+  "seo": {
+    "title": "João Dias · Cybersecurity & Network Specialist",
+    "description": "João Dias, SOC analyst in Lisbon. Projects, timeline, skills and contact."
+  }
 }

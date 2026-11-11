@@ -1,48 +1,36 @@
 ---
 import cv from '../content/cv.json';
 import ProjectCard from './ProjectCard.astro';
-import CmdHeading from './CmdHeading.astro';
+import SectionHead from './SectionHead.astro';
+const contexts = [...new Set(cv.projects.map((p) => p.context))];
 ---
 
 <section class="section" id="work" data-cmd-section="Projects">
-  <p class="eyebrow reveal">Projects</p>
-  <CmdHeading label="Projects" cmd="ls ~/projects" />
-  <div class="grid">
-    {cv.projects.map((project) => <ProjectCard project={project} />)}
+  <SectionHead n="02" label="Projects" cmd="ls ~/projects" />
+  <p class="ls mono reveal" aria-hidden="true">total {cv.projects.length} <span>·</span> {contexts.join(', ')}</p>
+  <div class="list">
+    {cv.projects.map((project, i) => <ProjectCard project={project} index={i} total={cv.projects.length} />)}
   </div>
 </section>
 
 <style>
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    align-items: start;
-  }
-  @media (max-width: 860px) {
-    .grid { grid-template-columns: 1fr; }
-  }
+  .ls { margin: -32px 0 32px; font-size: 13px; color: var(--dim); }
+  .ls span { color: var(--line-2); }
 </style>
 
 <script>
   import { mountArt } from '../scripts/art';
-  import { motionOff } from '../scripts/motion';
 
   document.querySelectorAll<HTMLCanvasElement>('canvas[data-art]').forEach(mountArt);
 
-  // Cards tilt toward the cursor (mouse and trackpad only).
+  // A soft light follows the cursor over each animation panel (mouse and trackpad only).
   if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    document.querySelectorAll<HTMLElement>('[data-tilt]').forEach((card) => {
-      card.addEventListener('pointermove', (e) => {
-        if (motionOff()) return;
-        const r = card.getBoundingClientRect();
-        const u = (e.clientX - r.left) / r.width;
-        const v = (e.clientY - r.top) / r.height;
-        card.style.transform = `perspective(1100px) rotateX(${(0.5 - v) * 6}deg) rotateY(${(u - 0.5) * 8}deg)`;
-        card.style.setProperty('--gx', `${u * 100}%`);
-        card.style.setProperty('--gy', `${v * 100}%`);
+    document.querySelectorAll<HTMLElement>('[data-glare]').forEach((panel) => {
+      panel.addEventListener('pointermove', (e) => {
+        const r = panel.getBoundingClientRect();
+        panel.style.setProperty('--gx', `${((e.clientX - r.left) / r.width) * 100}%`);
+        panel.style.setProperty('--gy', `${((e.clientY - r.top) / r.height) * 100}%`);
       });
-      card.addEventListener('pointerleave', () => { card.style.transform = ''; });
     });
   }
 </script>

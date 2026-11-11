@@ -6,13 +6,18 @@
     "node": ">=22.22.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev --port 4324",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "preview": "astro preview --port 4324",
+    "astro": "astro",
+    "slop": "node tools/slop-check.mjs",
+    "shots": "node tools/capture.mjs"
   },
   "dependencies": {
     "@fontsource/geist-mono": "^5.3.0",
     "astro": "^7.4.1"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.49.1"
   }
 }

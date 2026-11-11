@@ -1,4 +1,8 @@
-/* Design tokens and base styles. Values come from BRAND.md. */
+/* Design tokens and base styles for the SHIELD concept.
+   Look: near-black navy, electric blue = secure, red = threat, chamfered glass
+   panels with a lit edge. Reference: two Pinterest motion pins (see ../BRAND-shield.md).
+   Colour tokens are overridden at runtime by src/content/theme.json (see Base.astro),
+   so the Website OS can change them without touching this file. */
 
 /* Self-hosted Fontshare fonts (ITF Free Font License: self-hosting allowed,
    files used unmodified). Geist Mono comes from @fontsource in Base.astro. */
@@ -17,16 +21,20 @@
   font-display: swap;
 }
 
+/* Registered so panel edges can transition between colours. */
+@property --edge-a { syntax: '<color>'; inherits: true; initial-value: #3aa8ff; }
+@property --edge-b { syntax: '<color>'; inherits: true; initial-value: #1c3b60; }
+
 :root {
-  --bg: #07080b;
-  --surface: #0d0f14;
-  --line: #1b1e26;
-  --line-2: #262a35;
-  --fg: #eef0f5;
-  --dim: #8b90a0;
-  --soft: #c3c7d3;
-  --accent: #ffb547;
-  --alert: #ff6b4a;
+  --bg: #02050b;
+  --surface: #06111f;
+  --line: #0f2238;
+  --line-2: #1c3b60;
+  --fg: #eaf4ff;
+  --dim: #7b94b4;
+  --soft: #b4cbe6;
+  --accent: #3aa8ff;
+  --alert: #ff2e55;
 
   --font-display: 'Clash Display', 'Satoshi', system-ui, sans-serif;
   --font-body: 'Satoshi', system-ui, sans-serif;
@@ -35,9 +43,10 @@
   --ease: cubic-bezier(.2, .8, .1, 1);
   --gutter: 28px;
   --max: 1240px;
+  --nav-h: 68px;
 }
 @media (max-width: 640px) {
-  :root { --gutter: 16px; }
+  :root { --gutter: 16px; --nav-h: 60px; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -50,16 +59,30 @@ html {
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
 }
+/* Circuit traces behind the whole page, very faint. A pattern mask tinted with the accent. */
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--accent);
+  opacity: .055;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none' stroke='%23fff' stroke-width='1'%3E%3Cpath d='M0 48H72l24 24h72l24-24h128'/%3E%3Cpath d='M48 0v120l24 24v64l-24 24v88'/%3E%3Cpath d='M0 264h120l24 24h56l24-24h96'/%3E%3Cpath d='M240 0v96l24 24h56M0 120h48M144 0v24'/%3E%3Ccircle cx='72' cy='48' r='3'/%3E%3Ccircle cx='168' cy='72' r='3'/%3E%3Ccircle cx='48' cy='120' r='3'/%3E%3Ccircle cx='72' cy='208' r='3'/%3E%3Ccircle cx='224' cy='264' r='3'/%3E%3Ccircle cx='240' cy='96' r='3'/%3E%3Ccircle cx='144' cy='288' r='3'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320' fill='none' stroke='%23fff' stroke-width='1'%3E%3Cpath d='M0 48H72l24 24h72l24-24h128'/%3E%3Cpath d='M48 0v120l24 24v64l-24 24v88'/%3E%3Cpath d='M0 264h120l24 24h56l24-24h96'/%3E%3Cpath d='M240 0v96l24 24h56M0 120h48M144 0v24'/%3E%3Ccircle cx='72' cy='48' r='3'/%3E%3Ccircle cx='168' cy='72' r='3'/%3E%3Ccircle cx='48' cy='120' r='3'/%3E%3Ccircle cx='72' cy='208' r='3'/%3E%3Ccircle cx='224' cy='264' r='3'/%3E%3Ccircle cx='240' cy='96' r='3'/%3E%3Ccircle cx='144' cy='288' r='3'/%3E%3C/svg%3E");
+  -webkit-mask-size: 320px 320px;
+  mask-size: 320px 320px;
+}
 body { overflow-x: hidden; min-height: 100vh; }
 ::selection { background: var(--accent); color: var(--bg); }
 a { color: inherit; text-decoration: none; }
 img, svg, canvas { display: block; }
 button { font: inherit; color: inherit; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 .skip {
   position: fixed; left: 16px; top: 12px; z-index: 2000;
-  padding: 8px 14px; border-radius: 999px;
+  padding: 8px 14px;
   background: var(--accent); color: var(--bg); font-weight: 500;
   transform: translateY(-160%); transition: transform .2s;
 }
@@ -70,6 +93,12 @@ button { font: inherit; color: inherit; }
   clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
 }
 
+.mono { font-family: var(--font-mono); }
+
+/* Clash Display sets words very close together, so multi-word headings
+   ("Network infrastructure design") read as one word. Open the gaps a little. */
+h3, .display { word-spacing: .06em; }
+
 .section {
   position: relative;
   max-width: var(--max);
@@ -79,16 +108,100 @@ button { font: inherit; color: inherit; }
 @media (max-width: 640px) {
   .section { padding-top: 96px; }
 }
-.eyebrow {
-  font-size: 13px; color: var(--dim);
-  letter-spacing: .08em; text-transform: uppercase;
-  margin-bottom: 18px;
+
+/* ---- Chamfered panel with a lit edge ---------------------------------------
+   .cut draws a border on a shape with two cut corners (top-left, bottom-right):
+   ::before is the edge (a gradient, brightest at the top-left), ::after is the
+   fill, one pixel smaller. Override --c (cut size), --fill and --edge-* per use.
+   Used by windows, project panels, buttons, the nav pill and the HUD. */
+.cut, .window, .btn {
+  --c: 16px;
+  --edge-a: color-mix(in srgb, var(--accent) 62%, var(--line-2));
+  --edge-b: var(--line-2);
+  --edge-c: var(--line);
+  --fill: var(--surface);
+  position: relative;
+  isolation: isolate;
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(var(--c) 0, 100% 0, 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, 0 100%, 0 var(--c));
+  transition: --edge-a .35s, --edge-b .35s;
 }
+.cut::before, .window::before, .btn::before,
+.cut::after, .window::after, .btn::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+.cut::before, .window::before, .btn::before {
+  inset: 0;
+  background: linear-gradient(135deg, var(--edge-a), var(--edge-b) 40%, var(--edge-b) 62%, var(--edge-c));
+}
+.cut::after, .window::after, .btn::after {
+  inset: 1px;
+  background: var(--fill);
+  clip-path: polygon(calc(var(--c) - .59px) 0, 100% 0, 100% calc(100% - var(--c) + .59px), calc(100% - var(--c) + .59px) 100%, 0 100%, 0 calc(var(--c) - .59px));
+}
+.cut:hover, .window:hover { --edge-a: var(--accent); --edge-b: color-mix(in srgb, var(--accent) 30%, var(--line-2)); }
+
+/* Small chamfered chip (tags, focus pills): flat fill, a lit bar on the left. */
 .tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .tags span {
-  font-size: 12px; padding: 3px 10px; border-radius: 999px;
-  background: rgba(255, 255, 255, .05); color: var(--soft);
+  font-size: 12px; padding: 4px 11px 4px 12px;
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--accent) 70%, transparent);
+  color: var(--soft);
+  clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
 }
+
+/* Buttons: one primary (solid blue) and one quiet style, both chamfered. */
+.btn {
+  --c: 11px;
+  --fill: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  transition: --edge-a .3s, --edge-b .3s, color .25s;
+}
+.btn:hover { --edge-a: var(--accent); --edge-b: var(--accent); --fill: color-mix(in srgb, var(--accent) 16%, var(--surface)); }
+.btn.primary {
+  --edge-a: color-mix(in srgb, var(--accent) 55%, #fff);
+  --edge-b: var(--accent);
+  --edge-c: var(--accent);
+  --fill: var(--accent);
+  color: var(--bg);
+}
+.btn.primary:hover { --edge-a: #fff; --fill: color-mix(in srgb, var(--accent) 80%, #fff); }
+.btn .arrow { display: inline-block; transition: transform .35s var(--ease); }
+.btn:hover .arrow { transform: translateX(3px); }
+.btn:hover .arrow.up { transform: translate(2px, -2px); }
+
+/* Terminal-style window used by About, Skills and the 404 page. */
+.window { --c: 20px; overflow: hidden; }
+.window-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px 10px 24px;
+  border-bottom: 1px solid var(--line-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dim);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.window-bar .dots { display: inline-flex; gap: 6px; margin-right: 8px; vertical-align: -1px; }
+.window-bar .dots i { width: 9px; height: 9px; background: var(--line-2); clip-path: polygon(30% 0, 100% 0, 100% 70%, 70% 100%, 0 100%, 0 30%); }
+.window-bar .dots i:first-child { background: var(--alert); }
+.window-bar .dots i:nth-child(2) { background: color-mix(in srgb, var(--accent) 45%, var(--line-2)); }
+.window-bar .dots i:nth-child(3) { background: var(--accent); }
 
 /* Scroll reveals (the .js class is set in <head>, so no-JS visitors see everything) */
 .js .reveal { opacity: 0; transform: translateY(28px); transition: opacity 1s, transform 1.1s var(--ease); }

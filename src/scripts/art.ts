@@ -1,23 +1,26 @@
 // Code-drawn animations for the project cards. Each one shows what the
 // project actually does. Picked by the card's data-art attribute.
 import { motionOff } from './motion';
+import { A, R, F, D, L } from './palette';
 
 type Draw = (g: CanvasRenderingContext2D, w: number, h: number, dt: number) => void;
 type Point = [number, number];
 
-const FG = '#eef0f5';
-const DIM = '#8b90a0';
-const LINE = '#262a35';
-const ACCENT = '#ffb547';
-const ALERT = '#ff6b4a';
+const FG = `rgb(${F})`;
+const DIM = `rgb(${D})`;
+const LINE = `rgb(${L})`;
+const ACCENT = `rgb(${A})`;
+const ALERT = `rgb(${R})`;
 const MONO = '11px "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const SMALL = '10px "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
 function status(g: CanvasRenderingContext2D, w: number, h: number, left: string, right: string) {
   g.font = MONO;
+  // On narrow panels (phones) the two labels collide; keep only the number on the right.
+  const fits = g.measureText(left).width + g.measureText(right).width + 18 * 2 + 16 <= w;
   g.fillStyle = DIM;
   g.textAlign = 'left';
-  g.fillText(left, 18, h - 14);
+  if (fits) g.fillText(left, 18, h - 14);
   g.fillStyle = FG;
   g.textAlign = 'right';
   g.fillText(right, w - 18, h - 14);
@@ -47,11 +50,11 @@ function fleet(): Draw {
     const waveX = px + wave * (w - px * 2);
     if (pause <= 0) {
       const band = g.createLinearGradient(waveX - 60, 0, waveX, 0);
-      band.addColorStop(0, 'rgba(255,181,71,0)');
-      band.addColorStop(1, 'rgba(255,181,71,.16)');
+      band.addColorStop(0, `rgba(${A},0)`);
+      band.addColorStop(1, `rgba(${A},.16)`);
       g.fillStyle = band;
       g.fillRect(waveX - 60, top - 8, 60, h - top - bottom + 16);
-      g.fillStyle = 'rgba(255,181,71,.7)';
+      g.fillStyle = `rgba(${A},.7)`;
       g.fillRect(waveX, top - 8, 1, h - top - bottom + 16);
     }
 
@@ -63,10 +66,10 @@ function fleet(): Draw {
       d.flash = Math.max(0, d.flash - dt * 1.6);
       if (d.current) current++;
 
-      const stroke = d.current ? 'rgba(238,240,245,.45)' : 'rgba(255,181,71,.85)';
+      const stroke = d.current ? `rgba(${A},.8)` : `rgba(${R},.85)`;
       g.beginPath();
       g.roundRect(x, y, dw, dh, 3);
-      g.fillStyle = d.current ? 'rgba(238,240,245,.06)' : 'rgba(255,181,71,.1)';
+      g.fillStyle = d.current ? `rgba(${A},.1)` : `rgba(${R},.1)`;
       g.fill();
       g.strokeStyle = stroke;
       g.lineWidth = 1;
@@ -77,7 +80,7 @@ function fleet(): Draw {
         const grow = (1 - d.flash) * 8;
         g.beginPath();
         g.roundRect(x - grow, y - grow, dw + grow * 2, dh + grow * 2, 4 + grow);
-        g.strokeStyle = `rgba(255,181,71,${d.flash * 0.8})`;
+        g.strokeStyle = `rgba(${A},${d.flash * 0.8})`;
         g.stroke();
       }
     });
@@ -125,13 +128,13 @@ function network(): Draw {
     for (const b of boxes) {
       g.beginPath();
       g.roundRect(b.x, b.y, b.w, b.h, 6);
-      g.strokeStyle = b.label === 'DMZ' ? 'rgba(255,181,71,.35)' : LINE;
+      g.strokeStyle = b.label === 'DMZ' ? `rgba(${A},.35)` : LINE;
       g.stroke();
       g.fillStyle = DIM;
       g.fillText(b.label, b.x + 8, b.y + 13);
       for (let i = 0; i < 3; i++) {
         const [x, y] = nodeIn(b, i, 3);
-        g.fillStyle = 'rgba(238,240,245,.7)';
+        g.fillStyle = `rgba(${F},.7)`;
         g.beginPath(); g.arc(x, y, 2.5, 0, Math.PI * 2); g.fill();
       }
       g.strokeStyle = LINE;
@@ -142,7 +145,7 @@ function network(): Draw {
     g.strokeStyle = LINE; g.stroke();
     g.fillStyle = DIM; g.fillText('site B', siteB.x + 8, siteB.y + 13);
     for (const [x, y] of siteNodes) {
-      g.fillStyle = 'rgba(238,240,245,.7)';
+      g.fillStyle = `rgba(${F},.7)`;
       g.beginPath(); g.arc(x, y, 2.5, 0, Math.PI * 2); g.fill();
     }
     g.beginPath(); g.moveTo(fwB[0], fwB[1]); g.lineTo(siteB.x, fwB[1]); g.strokeStyle = LINE; g.stroke();
@@ -154,7 +157,7 @@ function network(): Draw {
     g.lineDashOffset = dash;
     g.setLineDash([6, 5]);
     g.beginPath(); g.moveTo(fwA[0] + 14, fwA[1]); g.lineTo(fwB[0] - 14, fwB[1]);
-    g.strokeStyle = 'rgba(255,181,71,.55)'; g.stroke();
+    g.strokeStyle = `rgba(${A},.55)`; g.stroke();
     g.setLineDash([]);
     g.lineDashOffset = 0;
     g.fillStyle = DIM;
@@ -166,9 +169,9 @@ function network(): Draw {
     for (const [i, [x, y]] of [fwA, fwB].entries()) {
       g.beginPath();
       g.roundRect(x - 13, y - 13, 26, 26, 6);
-      g.fillStyle = '#0d0f14';
+      g.fillStyle = '#06111f';
       g.fill();
-      g.strokeStyle = i === 0 && flash > 0 ? `rgba(255,107,74,${0.4 + flash * 0.6})` : ACCENT;
+      g.strokeStyle = i === 0 && flash > 0 ? `rgba(${R},${0.4 + flash * 0.6})` : ACCENT;
       g.stroke();
       g.fillStyle = FG;
       g.font = SMALL;
@@ -181,7 +184,7 @@ function network(): Draw {
     if (flash > 0) {
       g.beginPath();
       g.arc(fwA[0], fwA[1], 16 + (1 - flash) * 16, 0, Math.PI * 2);
-      g.strokeStyle = `rgba(255,107,74,${flash * 0.7})`;
+      g.strokeStyle = `rgba(${R},${flash * 0.7})`;
       g.stroke();
     }
 
@@ -236,12 +239,12 @@ function failover(): Draw {
     // Links
     g.lineWidth = 1;
     for (const c of clients) for (const [i, d] of dc.entries()) {
-      g.strokeStyle = up(i) ? 'rgba(38,42,53,1)' : 'rgba(255,107,74,.12)';
+      g.strokeStyle = up(i) ? `rgba(${L},1)` : `rgba(${R},.12)`;
       g.beginPath(); g.moveTo(c[0], c[1]); g.lineTo(d[0], d[1]); g.stroke();
     }
     for (const d of dc) { g.strokeStyle = LINE; g.beginPath(); g.moveTo(d[0], d[1]); g.lineTo(dpm[0], dpm[1]); g.stroke(); }
     g.setLineDash(phase === 'down' ? [3, 4] : []);
-    g.strokeStyle = phase === 'down' ? 'rgba(255,107,74,.5)' : 'rgba(255,181,71,.4)';
+    g.strokeStyle = phase === 'down' ? `rgba(${R},.5)` : `rgba(${A},.4)`;
     g.beginPath(); g.moveTo(dc[0][0] + 34, dc[0][1]); g.lineTo(dc[1][0] - 34, dc[1][1]); g.stroke();
     g.setLineDash([]);
 
@@ -282,7 +285,7 @@ function failover(): Draw {
     for (const s of snaps) {
       s.p += dt * 0.8;
       const [sx, sy] = dc[s.dc];
-      g.fillStyle = 'rgba(238,240,245,.8)';
+      g.fillStyle = `rgba(${F},.8)`;
       g.fillRect(sx + (dpm[0] - sx) * s.p - 2, sy + (dpm[1] - sy) * s.p - 2, 4, 4);
     }
     snaps = snaps.filter((s) => s.p < 1);
@@ -292,9 +295,9 @@ function failover(): Draw {
     g.textAlign = 'center';
     for (const [i, [x, y]] of dc.entries()) {
       const state = i === 0 && phase === 'down' ? 'offline' : i === 0 && phase === 'sync' ? 'replicating' : 'online';
-      const color = state === 'offline' ? ALERT : state === 'replicating' ? ACCENT : 'rgba(238,240,245,.6)';
+      const color = state === 'offline' ? ALERT : state === 'replicating' ? ACCENT : `rgba(${F},.6)`;
       g.beginPath(); g.roundRect(x - 34, y - 15, 68, 30, 6);
-      g.fillStyle = '#0d0f14'; g.fill();
+      g.fillStyle = '#06111f'; g.fill();
       g.strokeStyle = color; g.stroke();
       g.fillStyle = state === 'offline' ? ALERT : FG;
       g.fillText(`DC0${i + 1}`, x, y + 4);
@@ -304,17 +307,17 @@ function failover(): Draw {
       g.font = MONO;
       if (state === 'offline' && t < 5.3) {
         const k = (t - 4.5) / 0.8;
-        g.strokeStyle = `rgba(255,107,74,${1 - k})`;
+        g.strokeStyle = `rgba(${R},${1 - k})`;
         g.beginPath(); g.roundRect(x - 34 - k * 14, y - 15 - k * 14, 68 + k * 28, 30 + k * 28, 6 + k * 8); g.stroke();
       }
     }
     g.beginPath(); g.roundRect(dpm[0] - 24, dpm[1] - 11, 48, 22, 5);
-    g.fillStyle = '#0d0f14'; g.fill();
+    g.fillStyle = '#06111f'; g.fill();
     g.strokeStyle = LINE; g.stroke();
     g.fillStyle = DIM; g.font = SMALL;
     g.fillText('DPM', dpm[0], dpm[1] + 3.5);
     for (const [x, y] of clients) {
-      g.fillStyle = 'rgba(238,240,245,.75)';
+      g.fillStyle = `rgba(${F},.75)`;
       g.fillRect(x - 6, y - 4, 12, 8);
     }
     g.textAlign = 'left';
@@ -346,7 +349,7 @@ function threads(): Draw {
       g.fillText(`T${i + 1}`, 18, y + 3.5);
     }
     g.setLineDash([3, 4]);
-    g.strokeStyle = 'rgba(255,181,71,.6)';
+    g.strokeStyle = `rgba(${A},.6)`;
     g.beginPath(); g.moveTo(gate, top - 10); g.lineTo(gate, h - bottom + 6); g.stroke();
     g.setLineDash([]);
     g.fillStyle = ACCENT;
@@ -373,7 +376,7 @@ function threads(): Draw {
         if (it.x > x1 - 20) it.alpha -= dt * 4;
       }
       const a = Math.max(0, it.alpha);
-      g.fillStyle = it.state === 'bad' ? `rgba(255,107,74,${a})` : it.state === 'ok' ? `rgba(238,240,245,${a})` : `rgba(238,240,245,${0.45 * a})`;
+      g.fillStyle = it.state === 'bad' ? `rgba(${R},${a})` : it.state === 'ok' ? `rgba(${F},${a})` : `rgba(${F},${0.45 * a})`;
       g.fillRect(it.x - 6, laneY(it.lane) + it.y - 3, 12, 6);
     }
     items = items.filter((it) => it.alpha > 0);

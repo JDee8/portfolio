@@ -3,9 +3,11 @@ import '@fontsource/geist-mono/latin-400.css';
 import '@fontsource/geist-mono/latin-500.css';
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
+import MobileMenu from '../components/MobileMenu.astro';
 import Footer from '../components/Footer.astro';
 import CommandBar from '../components/CommandBar.astro';
 import cv from '../content/cv.json';
+import theme from '../content/theme.json';
 
 interface Props {
   title?: string;
@@ -13,10 +15,19 @@ interface Props {
   noindex?: boolean;
 }
 const {
-  title = `${cv.name} · ${cv.headline}`,
-  description = `${cv.name}, SOC analyst in Lisbon. Projects, timeline, skills and contact.`,
+  title = cv.seo.title,
+  description = cv.seo.description,
   noindex = false,
 } = Astro.props;
+
+// Colour tokens from theme.json. "html:root" beats the defaults in global.css
+// whatever order the stylesheets end up in.
+const hex = (v: string) => (/^#[0-9a-f]{6}$/i.test(v) ? v : null);
+const vars: [string, string][] = [
+  ['bg', theme.bg], ['surface', theme.surface], ['line', theme.line], ['line-2', theme.line2],
+  ['fg', theme.fg], ['soft', theme.soft], ['dim', theme.dim], ['accent', theme.accent], ['alert', theme.alert],
+];
+const themeCss = `html:root{${vars.filter(([, v]) => hex(v)).map(([k, v]) => `--${k}:${v}`).join(';')}}`;
 ---
 
 <!doctype html>
@@ -26,7 +37,7 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#07080b" />
+    <meta name="theme-color" content={hex(theme.bg) ?? '#02050b'} />
     {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -35,6 +46,7 @@ const {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preload" href="/fonts/ClashDisplay-Variable.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/Satoshi-Variable.woff2" as="font" type="font/woff2" crossorigin />
+    <style is:inline set:html={themeCss}></style>
     <script is:inline>
       // Set the motion state before first paint so nothing animates when it shouldn't.
       (function () {
@@ -49,11 +61,13 @@ const {
   <body>
     <a class="skip" href="#main">Skip to content</a>
     <Nav />
+    <MobileMenu />
     <slot />
     <Footer />
     <CommandBar />
     <script>
       import '../scripts/reveal';
+      import '../scripts/clock';
     </script>
   </body>
 </html>

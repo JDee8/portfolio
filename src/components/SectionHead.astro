@@ -1,0 +1,30 @@
+---
+import CmdHeading from './CmdHeading.astro';
+// Index + label + rule (reference: brittanychiang.com section index), then the
+// typed shell command from v1. The index matches the numbers in the nav.
+interface Props {
+  n: string;
+  label: string;
+  cmd: string;
+  tight?: boolean;
+}
+const { n, label, cmd, tight = false } = Astro.props;
+---
+
+<p class="eyebrow reveal" aria-hidden="true"><span class="idx mono">{n}</span><span class="rule"></span><span>{label}</span></p>
+<CmdHeading label={label} cmd={cmd} tight={tight} />
+
+<style>
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--dim);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .idx { color: var(--accent); letter-spacing: 0; }
+  .rule { width: 40px; height: 1px; background: var(--line-2); }
+</style>

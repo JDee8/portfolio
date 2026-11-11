@@ -1,6 +1,7 @@
 // Text drawn as particles that spring to their place, flee the cursor and
-// glow amber while they move. Used by the hero and the 404 page.
+// flash red (threat) while they move, then settle back to ice and blue (secure). Used by the hero and the 404 page.
 import { motionOff } from './motion';
+import { A, F, R } from './palette';
 
 interface Particle {
   x: number; y: number; vx: number; vy: number;
@@ -18,6 +19,8 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const text = (host.dataset.text ?? '').trim();
+  // Vertical centre of the text as a share of the canvas height (data-cy, default 0.45).
+  const CY = Number(host.dataset.cy) || 0.45;
   let W = 0, H = 0;
   let parts: Particle[] = [];
   let dust: Dust[] = [];
@@ -42,7 +45,8 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
     off.width = W;
     off.height = H;
     const o = off.getContext('2d', { willReadFrequently: true })!;
-    const lines = W < 760 && text.includes(' ') ? text.split(/\s+/) : [text];
+    // Two lines on narrow or portrait screens (phones, tablets held upright).
+    const lines = (W < 760 || H > W * 1.15) && text.includes(' ') ? text.split(/\s+/) : [text];
     let size = 200;
     o.font = FONT(size);
     const widest = Math.max(...lines.map((l) => o.measureText(l).width));
@@ -51,7 +55,7 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
     o.textAlign = 'center';
     o.textBaseline = 'middle';
     o.fillStyle = '#fff';
-    lines.forEach((line, i) => o.fillText(line, W / 2, H * 0.45 + (i - (lines.length - 1) / 2) * size * 0.98));
+    lines.forEach((line, i) => o.fillText(line, W / 2, H * CY + (i - (lines.length - 1) / 2) * size * 0.98));
 
     const data = o.getImageData(0, 0, W, H).data;
     const cap = (W < 760 ? 3200 : 6500) * quality;
@@ -92,7 +96,7 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
       dustPaths[d.bucket].rect(d.x, d.y, d.r, d.r);
     }
     dustPaths.forEach((path, i) => {
-      ctx!.fillStyle = `rgba(238,240,245,${DUST_ALPHA[i]})`;
+      ctx!.fillStyle = `rgba(${F},${DUST_ALPHA[i]})`;
       ctx!.fill(path);
     });
     const calm = new Path2D(), warm = new Path2D(), hot = new Path2D();
@@ -117,9 +121,12 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
       const speed = p.vx * p.vx + p.vy * p.vy;
       (speed > 3 ? hot : p.warm ? warm : calm).rect(p.x, p.y, p.size, p.size);
     }
-    ctx!.fillStyle = '#eef0f5'; ctx!.fill(calm);
-    ctx!.fillStyle = 'rgba(255,181,71,.75)'; ctx!.fill(warm);
-    ctx!.fillStyle = '#ffb547'; ctx!.fill(hot);
+    ctx!.fillStyle = `rgb(${F})`; ctx!.fill(calm);
+    ctx!.fillStyle = `rgba(${A},.85)`; ctx!.fill(warm);
+    ctx!.lineWidth = 4; ctx!.lineJoin = 'round';
+    ctx!.strokeStyle = `rgba(${A},.1)`; ctx!.stroke(warm);
+    ctx!.fillStyle = `rgb(${R})`; ctx!.fill(hot);
+    ctx!.strokeStyle = `rgba(${R},.14)`; ctx!.stroke(hot);
   }
 
   function frame(now: number) {
@@ -151,7 +158,7 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
     }
   }
 
-  function scatter(cx = W / 2, cy = H * 0.45) {
+  function scatter(cx = W / 2, cy = H * CY) {
     if (motionOff()) return;
     for (const p of parts) {
       const dx = p.x - cx, dy = p.y - cy, d = Math.hypot(dx, dy) || 1;

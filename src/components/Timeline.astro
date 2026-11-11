@@ -1,81 +1,94 @@
 ---
 import cv from '../content/cv.json';
 import { month, range } from '../lib/format';
-import CmdHeading from './CmdHeading.astro';
+import SectionHead from './SectionHead.astro';
 
+// The heading says "git log --career", so v2 renders entries as commits:
+// a short hash, a ref (HEAD for the current job, tags for certifications) and
+// the date in a left column (reference: brittanychiang.com experience list).
 interface Entry {
   kind: 'major' | 'milestone';
   title: string;
   org: string;
   when: string;
   sort: string;
+  ref?: string;
   points?: string[];
   tags?: string[];
   note?: string;
   current?: boolean;
 }
 
-// Jobs, education and certifications in one list, newest first (ongoing roles on top).
+// Stable 7-character "commit hash" from the title (FNV-1a). Decoration only.
+const hash = (s: string) => {
+  let h = 0x811c9dc5;
+  for (const ch of s) { h ^= ch.charCodeAt(0); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(16).padStart(8, '0').slice(0, 7);
+};
+
 const entries: Entry[] = [
   ...cv.experience.map((e) => ({
-    kind: 'major' as const, title: e.role, org: e.org, when: range(e.start, e.end),
-    sort: e.end ?? '9999-12', points: e.points, tags: e.tags, current: !e.end,
+    kind: 'major' as const, title: e.role, org: `${e.org} · ${e.location}`, when: range(e.start, e.end),
+    sort: e.end ?? '9999-12', points: e.points, tags: e.tags, current: !e.end, ref: !e.end ? 'HEAD -> main' : undefined,
   })),
   ...cv.education.map((e) => ({
-    kind: 'major' as const, title: e.title, org: e.school, when: range(e.start, e.end), sort: e.end, note: e.note,
+    kind: 'major' as const, title: e.title, org: e.school, when: range(e.start, e.end), sort: e.end, note: e.note, ref: 'merged',
   })),
   ...cv.certifications.map((c) => ({
     kind: 'milestone' as const, title: c.name, org: `${c.issuer} · ${c.status}`, when: month(c.date), sort: c.date,
+    ref: `tag: ${c.name.replace(`${c.issuer} `, '').toLowerCase()}`,
   })),
 ].sort((a, b) => b.sort.localeCompare(a.sort));
 ---
 
 <section class="section" id="timeline" data-cmd-section="Timeline">
-  <p class="eyebrow reveal">Timeline</p>
-  <CmdHeading label="Timeline" cmd="git log --career" />
-  <div class="tl" data-timeline>
+  <SectionHead n="03" label="Timeline" cmd="git log --career" />
+  <div class="log" data-timeline>
     <span class="rail" aria-hidden="true"></span>
     <span class="fill" aria-hidden="true"></span>
     <ol>
-      {entries.map((e) => (
-        <li class:list={['item', e.kind, { current: e.current }]}>
-          <span class="when">{e.when}</span>
-          <div>
-            <h3>{e.title}</h3>
-            <p class="org">{e.org}{e.note && <> · <b>{e.note}</b></>}</p>
-            {e.points && <ul class="points">{e.points.map((p) => <li>{p}</li>)}</ul>}
-            {e.tags && e.tags.length > 0 && <div class="tags">{e.tags.map((t) => <span>{t}</span>)}</div>}
-          </div>
-        </li>
-      ))}
+    {entries.map((e) => (
+      <li class:list={['commit', e.kind, { current: e.current }]}>
+        <div class="side mono">
+          <p class="head" aria-hidden="true"><span class="hash">{hash(e.title)}</span>{e.ref && <span class="ref">({e.ref})</span>}</p>
+          <p class="when">{e.when}</p>
+        </div>
+        <div class="main">
+          <h3>{e.title}</h3>
+          <p class="org">{e.org}{e.note && <> · <b>{e.note}</b></>}</p>
+          {e.points && <ul class="points">{e.points.map((p) => <li>{p}</li>)}</ul>}
+          {e.tags && e.tags.length > 0 && <div class="tags">{e.tags.map((t) => <span>{t}</span>)}</div>}
+        </div>
+      </li>
+    ))}
     </ol>
   </div>
 </section>
 
 <style>
-  .tl { position: relative; padding-left: 40px; }
+  .log { position: relative; padding-left: 40px; }
+  ol { list-style: none; }
   .rail, .fill { position: absolute; left: 6px; top: 8px; width: 1px; }
   .rail { bottom: 8px; background: var(--line); }
   .fill {
     height: calc(100% - 16px);
-    background: linear-gradient(var(--accent), rgba(255, 181, 71, .15));
+    background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 15%, transparent));
     transform-origin: top;
     transform: scaleY(var(--p, 0));
   }
-  ol { list-style: none; }
-  .item {
+  .commit {
     position: relative;
     display: grid;
-    grid-template-columns: 180px 1fr;
-    gap: 24px;
-    padding: 28px 0;
+    grid-template-columns: 220px 1fr;
+    gap: 32px;
+    padding: 30px 0;
     border-bottom: 1px solid var(--line);
   }
-  .item::before {
+  .commit::before {
     content: '';
     position: absolute;
     left: -39px;
-    top: 36px;
+    top: 37px;
     width: 11px;
     height: 11px;
     border-radius: 50%;
@@ -83,11 +96,22 @@ const entries: Entry[] = [
     border: 1px solid var(--dim);
     transition: background .4s, border-color .4s, box-shadow .4s;
   }
-  .item.lit::before { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 6px rgba(255, 181, 71, .12); }
-  .milestone { padding: 18px 0; }
-  .milestone::before { top: 25px; width: 9px; height: 9px; left: -38px; }
-  .when { color: var(--dim); padding-top: 4px; font-variant-numeric: tabular-nums; }
-  .current .when { color: var(--accent); }
+  .commit:global(.lit)::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+  .milestone { padding: 20px 0; }
+  .milestone::before { top: 27px; width: 9px; height: 9px; left: -38px; }
+
+  .side { font-size: 12.5px; padding-top: 6px; }
+  .head { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+  .hash { color: var(--accent); }
+  .ref { color: var(--dim); }
+  .current .ref { color: var(--fg); }
+  .when { margin-top: 4px; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .current .when { color: var(--soft); }
+
   h3 {
     font-family: var(--font-display);
     font-weight: 500;
@@ -96,24 +120,28 @@ const entries: Entry[] = [
     line-height: 1.15;
   }
   .milestone h3 { font-size: clamp(18px, 1.6vw, 22px); }
-  .org { color: var(--dim); margin-top: 2px; }
+  .org { color: var(--dim); margin-top: 4px; }
   .org b { color: var(--fg); font-weight: 500; }
-  .points { margin-top: 12px; padding-left: 18px; color: var(--soft); max-width: 62ch; }
+  .points { margin-top: 14px; padding-left: 18px; color: var(--soft); max-width: 62ch; }
   .points li + li { margin-top: 6px; }
   .points li::marker { color: var(--accent); }
   .tags { margin-top: 16px; }
+
   @media (max-width: 760px) {
-    .item { grid-template-columns: 1fr; gap: 4px; }
+    .commit { grid-template-columns: 1fr; gap: 10px; }
+    .side { padding-top: 2px; }
+    .commit::before { top: 34px; }
+    .milestone::before { top: 24px; }
   }
 </style>
 
 <script>
   import { motionOff } from '../scripts/motion';
 
-  // The rail fills and the dots light up as you scroll through the timeline.
+  // The rail fills and the commits light up as you scroll through the log.
   const tl = document.querySelector<HTMLElement>('[data-timeline]');
   if (tl) {
-    const items = [...tl.querySelectorAll<HTMLElement>('.item')];
+    const items = [...tl.querySelectorAll<HTMLElement>('.commit')];
     const update = () => {
       const all = motionOff();
       const r = tl.getBoundingClientRect();

@@ -1,40 +1,59 @@
 ---
 import Base from '../layouts/Base.astro';
+import { sections } from '../lib/sections';
+// Reference: 404s.design terminal pages (Edoardo Lunardi, Ethan+ AI).
+// Particles from v1 stay; the shell output under them echoes the missing path.
 ---
 
 <Base title="Page not found · João Dias" noindex>
   <main id="main">
-    <section class="lost" data-particles data-text="404">
+    <section class="lost" data-particles data-text="404" data-cy="0.36">
       <canvas aria-hidden="true"></canvas>
       <div class="msg">
-        <h1>This page does not exist.</h1>
-        <p>Scatter the numbers if you like. Then <a href="/">go home</a> or press <button type="button" data-cmdk><span data-cmdk-key>Ctrl K</span></button>.</p>
+        <h1 class="sr-only">Page not found</h1>
+        <div class="window term">
+          <div class="window-bar"><span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>zsh</span><span>404</span></div>
+          <div class="body mono">
+            <p><span class="ps" aria-hidden="true">$</span> cd <span data-path>/missing-page</span></p>
+            <p class="err">cd: no such file or directory: <span data-path>/missing-page</span></p>
+            <p><span class="ps" aria-hidden="true">$</span> ls ~</p>
+            <p class="ls">
+              <a href="/">~/</a>
+              {sections.map((s) => <a href={`/#${s.id}`}>{s.id}/</a>)}
+            </p>
+            <p class="hint">Click the numbers to scatter them, or press <button type="button" data-cmdk><span data-cmdk-key>Ctrl K</span></button></p>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 </Base>
 
 <style>
-  .lost { position: relative; height: min(100svh, 1600px); min-height: 520px; overflow: hidden; }
+  .lost { position: relative; height: min(100svh, 1600px); min-height: 620px; overflow: hidden; }
   canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: pan-y; }
   .msg {
     position: absolute;
     inset: auto 0 0 0;
-    padding: 0 var(--gutter) 48px;
-    text-align: center;
+    display: grid;
+    place-items: center;
+    padding: 0 var(--gutter) 40px;
     pointer-events: none;
   }
-  .msg a, .msg button { pointer-events: auto; }
-  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(22px, 2.6vw, 32px); letter-spacing: -.01em; }
-  p { color: var(--dim); margin-top: 8px; }
-  a { color: var(--accent); }
-  a:hover { text-decoration: underline; }
+  .term { width: min(560px, 100%); pointer-events: auto; }
+  .body { padding: 16px 18px 18px; font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; }
+  .ps { color: var(--accent); }
+  .err { color: var(--alert); }
+  .ls { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+  .ls a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+  .ls a:hover { color: var(--accent); text-decoration-color: var(--accent); }
+  .hint { margin-top: 8px; color: var(--dim); font-family: var(--font-body); }
   button {
     background: rgba(255, 255, 255, .04);
     border: 1px solid var(--line-2);
     border-radius: 6px;
     padding: 1px 8px;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
   }
   button:hover { border-color: var(--accent); }
@@ -45,4 +64,10 @@ import Base from '../layouts/Base.astro';
   const host = document.querySelector<HTMLElement>('.lost');
   const canvas = host?.querySelector('canvas');
   if (host && canvas) particleText(canvas, host);
+
+  // Echo the path the visitor asked for (as text, never as HTML).
+  let path = location.pathname;
+  try { path = decodeURIComponent(path); } catch {}
+  path = path.slice(0, 80);
+  document.querySelectorAll<HTMLElement>('[data-path]').forEach((el) => { el.textContent = path; });
 </script>

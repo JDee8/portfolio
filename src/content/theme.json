@@ -1,0 +1,12 @@
+{
+  "_about": "Colour tokens. Edited from the Website OS (/os). Values must be 6-digit hex. Shield concept: blue = secure, red = threat.",
+  "bg": "#02050b",
+  "surface": "#06111f",
+  "line": "#0f2238",
+  "line2": "#1c3b60",
+  "fg": "#eaf4ff",
+  "soft": "#b4cbe6",
+  "dim": "#7b94b4",
+  "accent": "#3aa8ff",
+  "alert": "#ff2e55"
+}

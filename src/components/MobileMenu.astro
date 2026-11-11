@@ -1,0 +1,151 @@
+---
+import cv from '../content/cv.json';
+import { encodedEmail } from '../lib/email';
+import { sections } from '../lib/sections';
+// Reference: navbar.gallery full-screen menus (big numbered links, contact underneath).
+// v1 hid the nav on phones and left only the command bar, which is awkward on touch.
+---
+
+<div class="menu" id="menu" data-menu role="dialog" aria-modal="true" aria-label="Menu" inert>
+  <div class="top">
+    <a href="/" class="logo" data-menu-close>jd<span class="dot">.</span><span class="sr-only"> João Dias, home</span></a>
+    <button type="button" class="close" data-menu-close>Close<span class="x" aria-hidden="true"></span></button>
+  </div>
+  <nav aria-label="Sections">
+    <ol>
+      {sections.map((s, i) => (
+        <li style={`--i:${i}`}>
+          <a href={`/#${s.id}`} data-menu-link={s.id}><span class="n mono" aria-hidden="true">{s.n}</span>{s.label}</a>
+        </li>
+      ))}
+    </ol>
+  </nav>
+  <div class="foot">
+    <div class="actions">
+      <button class="btn primary" type="button" data-email={encodedEmail}>Email <span class="arrow" aria-hidden="true">→</span></button>
+      <a class="btn" href={cv.contact.linkedin} target="_blank" rel="noopener">LinkedIn <span class="arrow up" aria-hidden="true">↗</span></a>
+    </div>
+    <p class="mono meta"><span data-clock="Lisbon">Lisbon</span></p>
+  </div>
+</div>
+
+<style>
+  .menu {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    padding: 0 var(--gutter) max(24px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .3s, visibility 0s .3s;
+    overflow-y: auto;
+  }
+  .menu.is-open { visibility: visible; opacity: 1; transition: opacity .3s; }
+  .top { display: flex; align-items: center; justify-content: space-between; height: var(--nav-h); flex: none; }
+  .logo { font-family: var(--font-display); font-weight: 600; font-size: 21px; letter-spacing: -.02em; padding: 6px 4px; }
+  .logo .dot { color: var(--accent); }
+  .close {
+    display: inline-flex; align-items: center; gap: 10px;
+    min-height: 40px; padding: 7px 16px;
+    font-size: 13px; background: rgba(255, 255, 255, .04);
+    border: 1px solid var(--line-2); border-radius: 999px; cursor: pointer;
+  }
+  .x { position: relative; width: 12px; height: 12px; }
+  .x::before, .x::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1.5px; background: currentColor; border-radius: 2px; }
+  .x::before { transform: rotate(45deg); }
+  .x::after { transform: rotate(-45deg); }
+
+  nav { flex: 1; display: flex; align-items: center; padding: 24px 0; }
+  ol { list-style: none; width: 100%; }
+  li {
+    border-bottom: 1px solid var(--line);
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity .5s, transform .6s var(--ease);
+  }
+  .menu.is-open li { opacity: 1; transform: none; transition-delay: calc(var(--i) * 60ms + 80ms); }
+  li a {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 14px 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(34px, 10vw, 56px);
+    line-height: 1.05;
+    letter-spacing: -.02em;
+  }
+  li a .n { font-size: 13px; color: var(--accent); letter-spacing: 0; }
+  li a:active { color: var(--accent); }
+
+  .foot { flex: none; display: grid; gap: 18px; padding-top: 12px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .meta { font-size: 12px; color: var(--dim); }
+</style>
+
+<script>
+  import { motionOff } from '../scripts/motion';
+  import { openEmail } from '../scripts/email';
+  import { toast } from '../scripts/toast';
+
+  const menu = document.querySelector<HTMLElement>('[data-menu]')!;
+  const opener = document.querySelector<HTMLButtonElement>('[data-menu-open]');
+  let open = false;
+
+  const focusables = () =>
+    [...menu.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')].filter((el) => el.offsetParent !== null);
+
+  function show() {
+    open = true;
+    menu.inert = false;
+    menu.classList.add('is-open');
+    opener?.setAttribute('aria-expanded', 'true');
+    document.documentElement.style.overflow = 'hidden';
+    requestAnimationFrame(() => menu.querySelector<HTMLElement>('.close')?.focus());
+  }
+  function hide(restoreFocus = true) {
+    if (!open) return;
+    open = false;
+    menu.classList.remove('is-open');
+    menu.inert = true;
+    opener?.setAttribute('aria-expanded', 'false');
+    document.documentElement.style.overflow = '';
+    if (restoreFocus) opener?.focus({ preventScroll: true });
+  }
+
+  opener?.addEventListener('click', show);
+  menu.querySelectorAll('[data-menu-close]').forEach((el) => el.addEventListener('click', () => hide()));
+
+  // Section links: close first, then scroll, so the page is not locked while it moves.
+  menu.querySelectorAll<HTMLAnchorElement>('[data-menu-link]').forEach((a) => a.addEventListener('click', (e) => {
+    const target = document.getElementById(a.dataset.menuLink!);
+    if (!target) return; // other pages: let the link load the home page
+    e.preventDefault();
+    hide(false);
+    target.scrollIntoView({ behavior: motionOff() ? 'auto' : 'smooth', block: 'start' });
+    history.replaceState(null, '', `#${target.id}`);
+  }));
+
+  const email = menu.querySelector<HTMLButtonElement>('[data-email]');
+  email?.addEventListener('click', () => {
+    openEmail(email.dataset.email!);
+    toast('Opening your email app. No email app? LinkedIn works too.');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!open) return;
+    if (e.key === 'Escape') { e.preventDefault(); hide(); }
+    if (e.key === 'Tab') {
+      const f = focusables();
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+  // Close if the window grows past the phone layout.
+  matchMedia('(min-width: 901px)').addEventListener('change', (m) => { if (m.matches) hide(false); });
+</script>

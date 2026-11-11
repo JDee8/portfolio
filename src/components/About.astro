@@ -1,66 +1,85 @@
 ---
 import cv from '../content/cv.json';
-import CmdHeading from './CmdHeading.astro';
+import SectionHead from './SectionHead.astro';
 
-// "CompTIA Security+ and A+" instead of repeating the issuer.
+// Reference: 21st.dev statement (bright first clause, dimmed rest).
+// The first paragraph becomes the statement; its first sentence is bright.
+const [first, ...more] = cv.site.about;
+const [lead, ...tail] = first.split(/(?<=\.)\s+/);
+
+// The facts read as the output of "whoami --long", matching the heading.
 const certified = cv.certifications.filter((c) => c.status === 'Certified');
-const sameIssuer = certified.every((c) => c.issuer === certified[0]?.issuer);
-const certText = sameIssuer
-  ? `${certified[0].issuer} ${certified.map((c) => c.name.replace(`${c.issuer} `, '')).join(' and ')}`
-  : certified.map((c) => c.name).join(', ');
+const certs = certified.map((c) => c.name.replace(`${c.issuer} `, '')).join(', ');
+const issuer = certified.every((c) => c.issuer === certified[0]?.issuer) ? `${certified[0].issuer} ` : '';
+const job = cv.experience.find((e) => !e.end) ?? cv.experience[0];
 const cet = cv.education[0];
-const facts = [
-  ['Based in', cv.location],
-  ['Certified', certText],
-  ['Specialization', `CET Cybersecurity, ${cet.note.replace('Final grade ', '')}`],
-  ['Languages', cv.languages.map((l) => l.name).join(', ')],
+const facts: [string, string][] = [
+  ['role', job.role],
+  ['org', job.org.replace(/\s*\(.*\)$/, '')],
+  ['based', cv.location],
+  ['certs', `${issuer}${certs}`],
+  ['school', `CET Cybersecurity · ${cet.note.replace('Final grade ', '')}`],
+  ['langs', cv.languages.map((l) => l.name).join(', ')],
 ];
 ---
 
 <section class="section" id="about" data-cmd-section="About">
-  <p class="eyebrow reveal">About</p>
-  <CmdHeading label="About" cmd="whoami" />
+  <SectionHead n="01" label="About" cmd="whoami" />
   <div class="cols">
     <div class="text">
-      {cv.site.about.map((p) => <p class="reveal">{p}</p>)}
+      <p class="statement display reveal"><span>{lead}</span> {tail.join(' ')}</p>
+      {more.map((p) => <p class="body reveal">{p}</p>)}
     </div>
-    <dl class="facts reveal">
-      {facts.map(([k, v]) => (
-        <div><dt>{k}</dt><dd>{v}</dd></div>
-      ))}
-    </dl>
+    <div class="window reveal">
+      <div class="window-bar"><span><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>~ whoami --long</span><span aria-hidden="true">{facts.length} lines</span></div>
+      <dl class="kv">
+        {facts.map(([k, v]) => (
+          <div><dt class="mono">{k}</dt><dd>{v}</dd></div>
+        ))}
+      </dl>
+    </div>
   </div>
 </section>
 
 <style>
   .cols {
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 56px;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 64px;
     align-items: start;
   }
-  .text p {
-    font-size: clamp(17px, 1.5vw, 20px);
+  .statement {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(24px, 2.7vw, 38px);
+    line-height: 1.2;
+    letter-spacing: -.015em;
+    color: var(--dim);
+    max-width: 24ch;
+  }
+  .statement span { color: var(--fg); }
+  .body {
+    margin-top: 22px;
+    font-size: clamp(16px, 1.3vw, 18px);
     color: var(--soft);
     max-width: 52ch;
   }
-  .text p + p { margin-top: 18px; }
-  .facts {
+  .statement + .body { margin-top: 32px; }
+
+  .kv { padding: 6px 0; }
+  .kv div {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    overflow: hidden;
+    grid-template-columns: 76px 1fr;
+    gap: 16px;
+    padding: 11px 18px;
+    border-bottom: 1px dashed var(--line);
   }
-  .facts div { background: var(--bg); padding: 16px 18px; }
-  dt { font-size: 12px; color: var(--dim); letter-spacing: .06em; text-transform: uppercase; }
-  dd { margin-top: 4px; font-weight: 500; }
+  .kv div:last-child { border-bottom: 0; }
+  dt { font-size: 13px; color: var(--dim); padding-top: 2px; }
+  dt::after { content: ':'; color: var(--line-2); }
+  dd { font-weight: 500; }
+
   @media (max-width: 900px) {
-    .cols { grid-template-columns: 1fr; gap: 32px; }
-  }
-  @media (max-width: 480px) {
-    .facts { grid-template-columns: 1fr; }
+    .cols { grid-template-columns: 1fr; gap: 40px; }
   }
 </style>

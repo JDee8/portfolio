@@ -1,32 +1,25 @@
 ---
-// Scroll-scrubbed video: scattered particles assemble into a shield as you scroll.
-// Clip made with Kling from frames rendered by tools/make-kling-frames.mjs.
+// Scroll-scrubbed scene, drawn in code (src/scripts/shield.ts): a padlock cracks,
+// shatters and re-forms as a shield as you scroll. Replaces the Kling video clip.
+// The three phases match the captions: detect, triage, contain.
 ---
 
 <section class="scene" data-scene aria-label="Security alerts: monitored, triaged, contained.">
   <div class="stage">
-    <video
-      muted
-      playsinline
-      disablepictureinpicture
-      preload="none"
-      data-src-portrait="/video/shield-portrait"
-      data-src-small="/video/shield-480"
-      data-src-large="/video/shield-720"
-      data-poster-portrait="/video/shield-first-portrait.webp"
-      data-poster="/video/shield-first.webp"
-      aria-hidden="true"
-    ></video>
-    <picture class="still" aria-hidden="true">
-      <source media="(max-aspect-ratio: 1/1)" srcset="/video/shield-last-portrait.webp" />
-      <img src="/video/shield-last.webp" alt="" loading="lazy" decoding="async" />
-    </picture>
-    <!-- Each line shows while scroll progress is inside its data-from/data-to window,
-         matching the clip's phases: scattered particles, grid, shield. -->
+    <canvas aria-hidden="true"></canvas>
+    <!-- Each line shows while scroll progress is inside its data-from/data-to window. -->
     <div class="caption" aria-hidden="true">
-      <p class="line" data-from="0" data-to="0.36"><span>$</span> tail -f alerts.log</p>
-      <p class="line" data-from="0.40" data-to="0.56"><span>$</span> triage --all</p>
-      <p class="line" data-from="0.60" data-to="1"><span>[ ok ]</span> contained</p>
+      <p class="line" data-from="0" data-to="0.29"><span>$</span> tail -f alerts.log</p>
+      <p class="line" data-from="0.33" data-to="0.56"><span>$</span> triage --all</p>
+      <p class="line" data-from="0.62" data-to="1"><span>[ ok ]</span> contained</p>
+    </div>
+    <div class="hud mono cut" aria-hidden="true">
+      <ol class="phases">
+        <li data-from="0" data-to="0.31"><b>01</b> detect</li>
+        <li data-from="0.31" data-to="0.6"><b>02</b> triage</li>
+        <li data-from="0.6" data-to="1.01"><b>03</b> contain</li>
+      </ol>
+      <div class="bar"><span></span></div>
     </div>
   </div>
 </section>
@@ -34,7 +27,7 @@
 <style>
   .scene {
     position: relative;
-    height: 260vh; /* scroll distance that plays the clip */
+    height: 220vh; /* scroll distance that plays the scene */
   }
   .stage {
     position: sticky;
@@ -50,97 +43,88 @@
     position: absolute;
     left: 0;
     right: 0;
-    height: 18%;
+    height: 16%;
     z-index: 1;
     pointer-events: none;
   }
   .stage::before { top: 0; background: linear-gradient(var(--bg), transparent); }
   .stage::after { bottom: 0; background: linear-gradient(transparent, var(--bg)); }
-
-  video,
-  .still img {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: max(100vw, 177.78svh); /* 16:9 file, covers the stage like object-fit: cover */
-    height: auto;
-  }
-  .still { display: none; }
-  /* Portrait screens use the 9:16 crop, so the shield fills the width at full sharpness. */
-  @media (max-aspect-ratio: 1/1) {
-    video, .still img { width: max(100vw, 56.25svh); }
-  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 
   .caption {
     position: absolute;
     left: var(--gutter);
-    bottom: 12svh;
+    bottom: 11svh;
     z-index: 2;
     font-family: var(--font-mono);
     font-weight: 500;
     font-size: clamp(22px, 3.2vw, 44px);
     line-height: 1.1;
     letter-spacing: -.035em;
+    text-shadow: 0 0 28px color-mix(in srgb, var(--accent) 30%, transparent);
   }
-  .line {
-    position: absolute;
-    bottom: 0;
-    white-space: nowrap;
-  }
+  .line { position: absolute; bottom: 0; white-space: nowrap; }
   .line span { color: var(--accent); }
   .line:not(:first-child) { opacity: 0; } /* before the script runs */
 
-  /* Animations off: no scroll distance, no video, just the finished shield and the last line. */
+  .hud {
+    --c: 12px;
+    --fill: color-mix(in srgb, var(--surface) 94%, var(--bg));
+    position: absolute;
+    right: var(--gutter);
+    bottom: 11svh;
+    z-index: 2;
+    width: 220px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--dim);
+  }
+  .phases { list-style: none; display: grid; gap: 6px; margin-bottom: 12px; }
+  .phases li { transition: color .3s; }
+  .phases b { font-weight: 400; color: var(--dim); opacity: .6; margin-right: 8px; transition: color .3s, opacity .3s; }
+  .phases li:global(.on) b { opacity: 1; }
+  .phases li:global(.on) { color: var(--fg); }
+  .phases li:global(.on) b { color: var(--accent); }
+  .bar { height: 2px; background: var(--line-2); overflow: hidden; }
+  .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--alert), var(--accent) 60%); transform-origin: left; transform: scaleX(var(--p, 0)); }
+  @media (max-width: 760px) {
+    .hud { left: var(--gutter); right: auto; bottom: auto; top: calc(var(--nav-h) + 20px); width: 160px; }
+  }
+
+  /* Animations off: no scroll distance, just the finished shield and the last line. */
   :global(html[data-motion='off']) .scene { height: auto; }
   :global(html[data-motion='off']) .stage { position: relative; height: min(100svh, 760px); }
-  :global(html[data-motion='off']) video { display: none; }
-  :global(html[data-motion='off']) .still { display: block; }
   :global(html[data-motion='off']) .line { opacity: 0 !important; }
   :global(html[data-motion='off']) .line:last-child { opacity: 1 !important; transform: none !important; }
+  :global(html[data-motion='off']) .hud { display: none; }
 </style>
 
 <script>
   import { motionOff } from '../scripts/motion';
+  import { shieldScene } from '../scripts/shield';
 
   const scene = document.querySelector<HTMLElement>('[data-scene]');
-  const video = scene?.querySelector('video');
-  if (scene && video) {
-    let loaded = false, current = 0, queued = false;
-    const portrait = innerHeight > innerWidth;
-    video.poster = (portrait ? video.dataset.posterPortrait : video.dataset.poster) ?? '';
-
-    // Load the clip one screen before it is needed: a 9:16 crop for portrait
-    // screens, 480p for small or data-saving landscape screens, 720p otherwise.
-    // AV1 where the browser supports it (~25% smaller), H.264 everywhere else.
-    const load = () => {
-      if (loaded || motionOff()) return;
-      loaded = true;
-      const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
-      const base = portrait ? video.dataset.srcPortrait
-        : innerWidth < 760 || saveData ? video.dataset.srcSmall
-        : video.dataset.srcLarge;
-      const av1 = video.canPlayType('video/mp4; codecs="av01.0.05M.08"') === 'probably';
-      video.src = `${base}${av1 ? '.av1' : ''}.mp4`;
-      video.preload = 'auto';
-      video.load();
+  const canvas = scene?.querySelector('canvas');
+  if (scene && canvas) {
+    const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
+    const progress = () => {
+      const r = scene.getBoundingClientRect();
+      return clamp01(-r.top / (r.height - innerHeight));
     };
-    // Preload only once the visitor has scrolled, so people who never leave the hero
-    // don't download the clip (on tall desktop screens the scene starts within reach).
-    let near = false, scrolled = false;
-    new IntersectionObserver(([entry]) => {
-      near = entry.isIntersecting;
-      if (near && scrolled) load();
-    }, { rootMargin: '100% 0px' }).observe(scene);
-    addEventListener('scroll', () => { scrolled = true; if (near) load(); }, { passive: true, once: true });
 
     // Captions: each line fades in at the start of its window and out at the end.
     const FADE = 0.04;
-    const clamp01 = (n: number) => Math.min(1, Math.max(0, n));
     const lines = [...scene.querySelectorAll<HTMLElement>('.line')].map((el) => ({
       el, from: Number(el.dataset.from), to: Number(el.dataset.to),
     }));
-    const captions = (p: number) => {
+    const phases = [...scene.querySelectorAll<HTMLElement>('.phases li')].map((el) => ({
+      el, from: Number(el.dataset.from), to: Number(el.dataset.to),
+    }));
+    const captions = () => {
+      if (motionOff()) return;
+      const p = progress();
+      scene.style.setProperty('--p', p.toFixed(3));
+      for (const { el, from, to } of phases) el.classList.toggle('on', p >= from && p < to);
       for (const { el, from, to } of lines) {
         const fadeIn = from <= 0 ? 1 : clamp01((p - from) / FADE);
         const fadeOut = to >= 1 ? 1 : clamp01((to - p) / FADE);
@@ -149,28 +133,13 @@
         el.style.transform = `translateY(${(1 - o) * (fadeIn < 1 ? 14 : -14)}px)`;
       }
     };
-
-    // Scroll position → video time. Only one seek runs at a time so phones keep up.
-    const update = () => {
-      queued = false;
-      if (motionOff()) return;
-      const r = scene.getBoundingClientRect();
-      const p = Math.min(1, Math.max(0, -r.top / (r.height - innerHeight)));
-      captions(p);
-      if (!video.duration || video.readyState < 2) return;
-      const target = p * (video.duration - 0.05);
-      current += (target - current) * 0.35;
-      if (Math.abs(target - current) < 0.002) current = target;
-      if (!video.seeking && Math.abs(video.currentTime - current) > 1 / 60) video.currentTime = current;
-      if (Math.abs(target - current) > 0.002) request();
-    };
-    const request = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
-
+    let queued = false;
+    const request = () => { if (!queued) { queued = true; requestAnimationFrame(() => { queued = false; captions(); }); } };
     addEventListener('scroll', request, { passive: true });
     addEventListener('resize', request);
-    video.addEventListener('loadeddata', request);
-    video.addEventListener('seeked', request);
-    addEventListener('jd:motion', () => { load(); request(); });
-    request();
+    addEventListener('jd:motion', request);
+    captions();
+
+    shieldScene(canvas, scene, () => (motionOff() ? 1 : progress()));
   }
 </script>

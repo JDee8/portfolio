@@ -23,7 +23,7 @@ const { label, cmd, tight = false } = Astro.props;
     margin-bottom: 56px;
   }
   .tight { margin-bottom: 20px; }
-  .ps { color: var(--accent); }
+  .ps { color: var(--accent); text-shadow: 0 0 22px color-mix(in srgb, var(--accent) 55%, transparent); }
   /* The hidden ghost reserves the full width, so typing never shifts the layout. */
   .type { display: inline-grid; }
   .ghost, .out { grid-area: 1 / 1; white-space: pre; }
