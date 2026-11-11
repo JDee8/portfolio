@@ -391,7 +391,7 @@ export function mountArt(canvas: HTMLCanvasElement) {
   const g = canvas.getContext('2d');
   if (!make || !g) return;
   const draw = make();
-  let w = 0, h = 0, visible = false, still = false, last = performance.now();
+  let w = 0, h = 0, visible = false, still = false, warm = false, last = performance.now();
 
   const size = () => {
     const dpr = Math.min(devicePixelRatio || 1, 2);
@@ -401,12 +401,20 @@ export function mountArt(canvas: HTMLCanvasElement) {
     canvas.height = Math.round(h * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     still = false;
+    if (warm && w) paint(0); // resizing clears a canvas: redraw it even while it is off screen
   };
   const paint = (dt: number) => {
     g.clearRect(0, 0, w, h);
     g.save();
     draw(g, w, h, dt);
     g.restore();
+  };
+  // Run three seconds of the panel's story unseen, so it opens mid-action (packets moving,
+  // threads busy) instead of on an empty diagram, and is never blank if someone scrolls fast.
+  const warmUp = () => {
+    if (warm || !w) return;
+    for (let i = 0; i < 90; i++) paint(1 / 30);
+    warm = true;
   };
 
   new ResizeObserver(size).observe(canvas);
@@ -423,7 +431,11 @@ export function mountArt(canvas: HTMLCanvasElement) {
       if (!still) { for (let i = 0; i < 240; i++) paint(1 / 60); still = true; }
       return;
     }
+    warmUp();
     paint(dt);
   };
   requestAnimationFrame(frame);
+  // Warm up when the browser is idle after load (or on first sight, whichever comes first).
+  if ('requestIdleCallback' in window) requestIdleCallback(warmUp, { timeout: 2500 });
+  else setTimeout(warmUp, 400);
 }

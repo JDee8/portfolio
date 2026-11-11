@@ -14,6 +14,7 @@ const RADIUS = 120;   // cursor reach (BRAND.md)
 const SPRING = 0.045;
 const DAMPING = 0.82;
 const DUST_ALPHA = [0.08, 0.16, 0.26, 0.38]; // dust is drawn in four batches, one per alpha
+const HALO = 0.36;    // strength of the blue light behind the letters
 
 export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
   const ctx = canvas.getContext('2d');
@@ -24,6 +25,7 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
   let W = 0, H = 0;
   let parts: Particle[] = [];
   let dust: Dust[] = [];
+  let halo: HTMLCanvasElement | null = null; // soft blue light behind the letters, drawn once per size
   const pointer = { x: -9999, y: -9999 };
   let visible = true, settled = false, t = 0, last = performance.now();
   // Fewer particles on machines with few cores, and again if frames run slow.
@@ -55,7 +57,25 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
     o.textAlign = 'center';
     o.textBaseline = 'middle';
     o.fillStyle = '#fff';
-    lines.forEach((line, i) => o.fillText(line, W / 2, H * CY + (i - (lines.length - 1) / 2) * size * 0.98));
+    const lineY = (i: number) => H * CY + (i - (lines.length - 1) / 2) * size * 0.98;
+    lines.forEach((line, i) => o.fillText(line, W / 2, lineY(i)));
+
+    // Halo: the same letters as a blurred blue glow, so the name reads as a lit sign and not as
+    // grey dots. It stays in place when the cursor pushes the particles away. Made with a canvas
+    // shadow (works in every browser): the text itself is drawn far off-canvas and only its
+    // shadow lands in view. Half resolution is enough for something this soft.
+    const HS = 0.5, FAR = 20000;
+    halo = document.createElement('canvas');
+    halo.width = Math.max(1, Math.round(W * HS));
+    halo.height = Math.max(1, Math.round(H * HS));
+    const hg = halo.getContext('2d')!;
+    hg.font = FONT(size * HS);
+    hg.textAlign = 'center';
+    hg.textBaseline = 'middle';
+    hg.shadowColor = `rgb(${A})`;
+    hg.shadowBlur = size * HS * 0.2;
+    hg.shadowOffsetX = FAR;
+    lines.forEach((line, i) => hg.fillText(line, (W / 2) * HS - FAR, lineY(i) * HS));
 
     const data = o.getImageData(0, 0, W, H).data;
     const cap = (W < 760 ? 3200 : 6500) * quality;
@@ -87,6 +107,12 @@ export function particleText(canvas: HTMLCanvasElement, host: HTMLElement) {
 
   function render(animate: boolean, dt: number) {
     ctx!.clearRect(0, 0, W, H);
+    if (halo) { // fades in while the particles fly to their places
+      const k = animate ? Math.min(1, Math.max(0, (t - 0.5) / 2)) : 1;
+      ctx!.globalAlpha = HALO * k * k;
+      ctx!.drawImage(halo, 0, 0, W, H);
+      ctx!.globalAlpha = 1;
+    }
     const dustPaths = DUST_ALPHA.map(() => new Path2D());
     for (const d of dust) {
       if (animate) {

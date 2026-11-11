@@ -86,7 +86,10 @@
   .phases li:global(.on) { color: var(--fg); }
   .phases li:global(.on) b { color: var(--accent); }
   .bar { height: 2px; background: var(--line-2); overflow: hidden; }
-  .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--alert), var(--accent) 60%); transform-origin: left; transform: scaleX(var(--p, 0)); }
+  /* Red → white → blue, like the fragments in the scene (red never blends straight into blue). */
+  .bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--alert) 20%, var(--fg) 45%, var(--accent) 70%); transform-origin: left; transform: scaleX(var(--p, 0)); }
+  /* Without JavaScript the canvas stays empty, so skip the scene. */
+  :global(html:not(.js)) .scene { display: none; }
   @media (max-width: 760px) {
     .hud { left: var(--gutter); right: auto; bottom: auto; top: calc(var(--nav-h) + 20px); width: 160px; }
   }

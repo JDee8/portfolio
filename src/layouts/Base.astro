@@ -29,6 +29,20 @@ const vars: [string, string][] = [
 ];
 // Link-preview image (public/og.png, made by tools/og.mjs). Needs an absolute URL.
 const ogImage = new URL('/og.png', Astro.site ?? 'https://joaodiasworks.com').href;
+const pageUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+// Structured data for search engines: who the site is about. Only facts already on the page,
+// and no email address (the page hides it from scrapers, see src/lib/email.ts).
+const [city, country] = cv.location.split(',').map((s) => s.trim());
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: cv.name,
+  jobTitle: cv.headline,
+  url: Astro.site?.href,
+  address: { '@type': 'PostalAddress', addressLocality: city, addressCountry: country },
+  sameAs: [cv.contact.linkedin],
+  knowsLanguage: cv.languages.map((l) => l.name),
+};
 const themeCss =`html:root{${vars.filter(([, v]) => hex(v)).map(([k, v]) => `--${k}:${v}`).join(';')}}`;
 ---
 
@@ -40,11 +54,14 @@ const themeCss =`html:root{${vars.filter(([, v]) => hex(v)).map(([k, v]) => `--$
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="theme-color" content={hex(theme.bg) ?? '#02050b'} />
+    <meta name="color-scheme" content="dark" />
     {noindex && <meta name="robots" content="noindex" />}
+    {!noindex && pageUrl && <link rel="canonical" href={pageUrl} />}
+    {!noindex && <script type="application/ld+json" is:inline set:html={JSON.stringify(person).replace(/</g, '\\u003c')} />}
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined} />
+    <meta property="og:url" content={pageUrl} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />

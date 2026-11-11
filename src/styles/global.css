@@ -58,6 +58,9 @@ html {
   -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
   scroll-padding-top: 80px;
+  /* Dark scrollbar and form controls (the default on Windows is a light grey bar on this near-black page). */
+  color-scheme: dark;
+  scrollbar-color: var(--line-2) var(--bg);
 }
 /* Circuit traces behind the whole page, very faint. A pattern mask tinted with the accent. */
 html::before {

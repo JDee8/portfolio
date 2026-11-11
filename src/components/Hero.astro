@@ -14,6 +14,8 @@ const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
   <div class="floor" aria-hidden="true"></div>
   <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <h1 class="sr-only">{cv.name}, {cv.headline}</h1>
+  <!-- The particle name needs JavaScript. Without it, show the name as plain text. -->
+  <noscript><p class="plain-name display" aria-hidden="true">{cv.name}</p></noscript>
   <div class="bottom">
     <div class="left">
       <p class="role display"><span>{lead}</span> {rest.join(' ')}</p>
@@ -82,6 +84,21 @@ const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
       repeating-linear-gradient(0deg, color-mix(in srgb, var(--alert) 30%, transparent) 0 1px, transparent 1px 72px);
   }
 
+  .plain-name {
+    position: absolute;
+    inset: 0 var(--gutter) 10%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    text-transform: uppercase;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(48px, 13vw, 200px);
+    line-height: .95;
+    letter-spacing: -.02em;
+    text-shadow: 0 0 40px color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+
   /* Four corner brackets frame the name like a monitor view. */
   .frame {
     position: absolute;
@@ -136,11 +153,12 @@ const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
   .coords .down { color: var(--accent); display: inline-block; animation: nudge 2.4s var(--ease) 2s 3; }
   @keyframes nudge { 0%, 60%, 100% { transform: none; } 30% { transform: translateY(3px); } }
 
-  /* Entrance: role, buttons and meta arrive after the particles start to settle. */
-  .role, .ctas, .right { opacity: 0; transform: translateY(10px); transition: opacity 1s, transform 1s var(--ease); }
-  .role { transition-delay: 1.1s; }
-  .ctas { transition-delay: 1.3s; }
-  .right { transition-delay: 1.45s; }
+  /* Entrance: role, buttons and meta arrive while the particles settle. Kept short: the role line
+     is the largest text on the first screen, so its delay is the page's largest-contentful-paint time. */
+  .role, .ctas, .right { opacity: 0; transform: translateY(10px); transition: opacity .8s, transform .9s var(--ease); }
+  .role { transition-delay: .25s; }
+  .ctas { transition-delay: .4s; }
+  .right { transition-delay: .55s; }
   .hero:global(.ready) .role,
   .hero:global(.ready) .ctas,
   .hero:global(.ready) .right { opacity: 1; transform: none; }
