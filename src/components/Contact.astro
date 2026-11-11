@@ -23,6 +23,18 @@ import SectionHead from './SectionHead.astro';
 
 <style>
   .contact { padding-top: 180px; }
+  /* The secured state: a blue pad glow under the buttons, echoing the ring under the shield. */
+  .contact::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -40px;
+    width: min(620px, 100%);
+    height: 220px;
+    pointer-events: none;
+    background: radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 72%);
+    border-radius: 50%;
+  }
   .cta {
     display: flex;
     flex-wrap: wrap;

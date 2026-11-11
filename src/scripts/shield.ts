@@ -41,6 +41,7 @@ function rng(seed: number) {
 const T0 = 0.30, T1 = 0.56;   // shatter window
 const FLOOR_U = 150;          // lock bottom / floor line, in units
 const HOVER = 36;             // the shield floats this far above where the lock stood
+const SHIELD_LEN = 1150;      // outline length in units, for the draw-on trace
 
 const bodyPath = (g: CanvasRenderingContext2D) => { g.beginPath(); g.roundRect(-110, -20, 220, 170, 18); };
 const shacklePath = (g: CanvasRenderingContext2D) => {
@@ -197,7 +198,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       DY[i] = Math.sin(a) * 140 * sp - 40 * r();
       GD[i] = 170 + r() * 190;
       FL[i] = FLOOR_U + (r() - 0.5) * 30;
-      RS[i] = 0.5 + r() * 0.13;
+      RS[i] = 0.46 + r() * 0.12;
       SZ[i] = 1 + r() * 1.6;
       PH[i] = r() * TAU;
       SW[i] = (r() - 0.5) * 2;
@@ -232,7 +233,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
     if (!W || !n) return;
     g.clearRect(0, 0, W, H);
     const th = smooth(0, 0.3, p);               // how red the lock is
-    const floorMix = smooth(0.5, 0.88, p);       // floor and ring: red → blue
+    const floorMix = smooth(0.48, 0.82, p);      // floor and ring: red → blue
     const floorCol = mix(ALR, ACC, floorMix);
     const amp = smooth(0.08, 0.3, p) * (p < T0 ? 2.4 : 0);
     const jx = Math.sin(t * 61) * amp, jy = Math.cos(t * 53) * amp;
@@ -293,6 +294,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       return m < 0.5 ? mix(ICE, RED_ICE, m / 0.5) : mix(RED_ICE, ACC, (m - 0.5) / 0.5);
     });
     const paths = bucketCol.map(() => new Path2D());
+    const swarm = new Path2D(); // fragments on their way into the shield: bigger and brighter, so the eye follows them
     const PI = Math.PI;
     for (let i = 0; i < n; i++) {
       const pe = Math.min(p, RS[i]);
@@ -301,7 +303,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       let x = LX[i] + DX[i] * ts, y = LY[i] + DY[i] * ts + GD[i] * gt * gt;
       if (y > FL[i]) y = FL[i];
       if (p < T0) { x += jx + Math.sin(t * 40 + PH[i]) * amp * 0.6; y += jy + Math.cos(t * 37 + PH[i] * 1.3) * amp * 0.6; }
-      const u = clamp01((p - RS[i]) / 0.24);
+      const u = clamp01((p - RS[i]) / 0.22);
       let m = th * 0.5;
       if (u > 0) {
         const e = eio3(u);
@@ -313,7 +315,8 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
         m = 0.5 + 0.5 * e;
       } else if (p >= T0) m = 0.5;
       const s = Math.max(1.1, SZ[i] * sc * 0.85);
-      paths[Math.min(BUCKETS - 1, (m * BUCKETS) | 0)].rect(ox + x * sc, oy + y * sc, s, s);
+      if (u > 0 && u < 1) { const s2 = s * 1.7; swarm.rect(ox + x * sc - (s2 - s) / 2, oy + y * sc - (s2 - s) / 2, s2, s2); }
+      else paths[Math.min(BUCKETS - 1, (m * BUCKETS) | 0)].rect(ox + x * sc, oy + y * sc, s, s);
     }
     const coreAlpha = p < T0 ? 0.42 : 1;
 
@@ -412,6 +415,9 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       g.fillStyle = css(c); g.fill(paths[k]);
       if (!lowFx) { g.globalAlpha = coreAlpha * 0.09; g.lineWidth = 5; g.strokeStyle = css(c); g.stroke(paths[k]); }
     });
+    g.globalAlpha = 1;
+    g.fillStyle = css(mix(ACC, [255, 255, 255], 0.5), 0.95); g.fill(swarm);
+    if (!lowFx) { g.globalAlpha = 0.14; g.lineWidth = 6; g.strokeStyle = css(ACC); g.stroke(swarm); }
     g.restore();
 
     // Flash when it breaks
@@ -424,8 +430,23 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       g.fillStyle = fg; g.fillRect(0, 0, W, H);
     }
 
+    // A blueprint outline traces the shield while the fragments are still on their way in,
+    // so the eye knows where they are going. It hands over to the solid shield below.
+    const sv = smooth(0.74, 0.92, p);
+    const trace = smooth(0.5, 0.78, p);
+    if (trace > 0.01 && sv < 0.99) {
+      g.save();
+      g.translate(ox, oy - HOVER * sc + Math.sin(t * 1.6) * 2 * sc); g.scale(sc, sc);
+      shieldPath(g);
+      g.lineWidth = 2.5; g.lineJoin = 'round';
+      g.setLineDash([SHIELD_LEN * trace, SHIELD_LEN]);
+      g.shadowColor = css(ACC, 0.9); g.shadowBlur = 10;
+      g.strokeStyle = css(mix(ACC, [255, 255, 255], 0.35), 0.9 * (1 - sv));
+      g.stroke();
+      g.restore();
+    }
+
     // Shield (solid) once it has formed
-    const sv = smooth(0.8, 0.97, p);
     if (sv > 0.01) {
       g.save();
       g.translate(ox, oy + -HOVER * sc + Math.sin(t * 1.6) * 2 * sc); g.scale(sc, sc);
@@ -444,7 +465,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
       g.restore();
 
       // ring of ticks around the shield
-      const ring = smooth(0.88, 1, p);
+      const ring = smooth(0.84, 0.98, p);
       if (ring > 0) {
         g.save();
         g.translate(ox, cy - HOVER * sc); g.rotate(t * 0.08);
@@ -462,7 +483,7 @@ export function shieldScene(canvas: HTMLCanvasElement, host: HTMLElement, getPro
     }
 
     // Light streaks once everything is secure
-    const stv = smooth(0.72, 0.95, p);
+    const stv = smooth(0.68, 0.9, p);
     if (stv > 0.01) {
       for (const s of streaks) {
         const x = (((t * s.v + s.o * (W + s.len)) % (W + s.len)) + (W + s.len)) % (W + s.len) - s.len;

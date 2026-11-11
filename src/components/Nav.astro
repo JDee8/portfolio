@@ -126,6 +126,13 @@ import { sections } from '../lib/sections';
   const targets = links
     .map((a) => document.getElementById(a.dataset.spy!))
     .filter((el): el is HTMLElement => !!el);
+  // The scroll scene sits between About and Projects and belongs to neither, so while it
+  // plays no link is lit (before, "About" stayed lit for the whole scene).
+  const scene = document.querySelector<HTMLElement>('[data-scene]');
+  const marks = [
+    ...targets.map((el) => ({ el, id: el.id })),
+    ...(scene ? [{ el: scene, id: '' }] : []),
+  ].sort((a, b) => (a.el.compareDocumentPosition(b.el) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
 
   // Scroll spy: the active section is the last one whose top has passed 40% of the screen.
   let current = '';
@@ -134,7 +141,7 @@ import { sections } from '../lib/sections';
     if (!targets.length) return;
     const line = innerHeight * 0.4;
     let id = '';
-    for (const t of targets) if (t.getBoundingClientRect().top < line) id = t.id;
+    for (const m of marks) if (m.el.getBoundingClientRect().top < line) id = m.id;
     // Past the last section's end (footer), keep it lit.
     if (id === current) return;
     current = id;

@@ -11,6 +11,7 @@ const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
 <section class="hero" id="top" data-particles data-text={cv.name.toUpperCase()}>
   <canvas aria-hidden="true"></canvas>
   <div class="glow" aria-hidden="true"></div>
+  <div class="floor" aria-hidden="true"></div>
   <div class="frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <h1 class="sr-only">{cv.name}, {cv.headline}</h1>
   <div class="bottom">
@@ -56,6 +57,29 @@ const [lead, ...rest] = cv.site.heroRole.split(/(?<=\.)\s+/);
       radial-gradient(50% 50% at 50% 50%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
       radial-gradient(60% 18% at 50% 100%, color-mix(in srgb, var(--alert) 16%, transparent), transparent 75%);
     pointer-events: none;
+  }
+
+  /* A faint red perspective grid on the "floor": the threat state the scroll scene starts from,
+     so the hero leads into the lock instead of ending before it. Static CSS, no animation. */
+  .floor {
+    position: absolute;
+    inset: auto -10% 0;
+    height: 42%;
+    perspective: 480px;
+    pointer-events: none;
+    opacity: calc(1 - var(--exit, 0) * 1.4);
+    -webkit-mask-image: linear-gradient(transparent, #000 45%, rgba(0, 0, 0, .3));
+    mask-image: linear-gradient(transparent, #000 45%, rgba(0, 0, 0, .3));
+  }
+  .floor::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform-origin: 50% 100%;
+    transform: rotateX(66deg) scale(1.7);
+    background:
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--alert) 30%, transparent) 0 1px, transparent 1px 72px),
+      repeating-linear-gradient(0deg, color-mix(in srgb, var(--alert) 30%, transparent) 0 1px, transparent 1px 72px);
   }
 
   /* Four corner brackets frame the name like a monitor view. */
